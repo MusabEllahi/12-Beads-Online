@@ -1729,6 +1729,10 @@
       // multi: bool     (multi-jump in progress)
       // p1name, p2name: string
       // beads: [_,count1,count2]
+      function setState(newState) {
+        _state = newState;
+        updateUI();
+      }
 
       function newState(p1name, p2name) {
         const board = Array(NODES).fill(null);
@@ -2098,7 +2102,7 @@
           startLocal(p1, p2);
         },
         startOnline, receiveMove, rematch, quit, sendChat,
-        _startOnline: startOnline,
+        _startOnline: startOnline,setState 
       };
     })();
 
@@ -2159,22 +2163,22 @@
         });
       },
 
-      sendMove(move) {
-        db.ref("rooms/" + this.roomCode + "/move").set({
-          move: move,
+      sendState(state) {
+        db.ref("rooms/" + this.roomCode + "/state").set({
+          state: state,
           sender: this.playerNum,
           time: Date.now()
         });
       },
 
       listenForMoves() {
-        db.ref("rooms/" + this.roomCode + "/move").on("value", snap => {
+        db.ref("rooms/" + this.roomCode + "/state").on("value", snap => {
           const data = snap.val();
           if (!data) return;
 
           if (data.sender === this.playerNum) return;
 
-          Game.executeMove(data.move, true);
+          Game.setState(data.state);
         });
       },
 
