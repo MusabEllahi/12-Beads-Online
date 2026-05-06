@@ -1,1736 +1,2201 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>12 Beads — Traditional Line Board</title>
-<style>
-/* ══════════════════════════════════════════
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12 Beads — Traditional Line Board</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <style>
+    /* ══════════════════════════════════════════
    12 BEADS — Traditional Line Board
    Aesthetic: Warm wood, brass, handcrafted
    ══════════════════════════════════════════ */
 
-:root {
-  --wood-dark:    #3d1f0a;
-  --wood-mid:     #7a3f1a;
-  --wood-light:   #c8843a;
-  --wood-grain:   #a06020;
-  --brass:        #c9922a;
-  --brass-light:  #f0c060;
-  --cream:        #f5e6c8;
-  --ink:          #1a0a00;
-  --red-bead:     #d42020;
-  --red-bead-hi:  #ff6040;
-  --red-bead-sh:  #6a0808;
-  --blue-bead:    #1540c0;
-  --blue-bead-hi: #4080ff;
-  --blue-bead-sh: #091a60;
-  --valid-glow:   rgba(255, 220, 80, 0.85);
-  --capture-glow: rgba(255, 80, 40, 0.85);
-  --line-col:     #2a1005;
-  --node-col:     #1a0a00;
-  --board-bg:     #b5721e;
-  --panel-bg:     rgba(20, 8, 0, 0.82);
-  --panel-border: rgba(201, 146, 42, 0.4);
-  --text-light:   #f5e6c8;
-  --text-muted:   #a07840;
-  --shadow-deep:  rgba(0,0,0,0.7);
-}
+    :root {
+      --wood-dark: #3d1f0a;
+      --wood-mid: #7a3f1a;
+      --wood-light: #c8843a;
+      --wood-grain: #a06020;
+      --brass: #c9922a;
+      --brass-light: #f0c060;
+      --cream: #f5e6c8;
+      --ink: #1a0a00;
+      --red-bead: #d42020;
+      --red-bead-hi: #ff6040;
+      --red-bead-sh: #6a0808;
+      --blue-bead: #1540c0;
+      --blue-bead-hi: #4080ff;
+      --blue-bead-sh: #091a60;
+      --valid-glow: rgba(255, 220, 80, 0.85);
+      --capture-glow: rgba(255, 80, 40, 0.85);
+      --line-col: #2a1005;
+      --node-col: #1a0a00;
+      --board-bg: #b5721e;
+      --panel-bg: rgba(20, 8, 0, 0.82);
+      --panel-border: rgba(201, 146, 42, 0.4);
+      --text-light: #f5e6c8;
+      --text-muted: #a07840;
+      --shadow-deep: rgba(0, 0, 0, 0.7);
+    }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-html, body {
-  width: 100%; height: 100%;
-  overflow-x: hidden;
-  font-family: 'Crimson Pro', Georgia, serif;
-  background: var(--wood-dark);
-  color: var(--text-light);
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--wood-dark);
+      color: var(--text-light);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-/* ── SCREENS ── */
-.screen {
-  position: fixed; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  transition: opacity 0.4s ease;
-}
-.screen.hidden { opacity: 0; pointer-events: none; }
+    /* ── SCREENS ── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s ease;
+    }
 
-/* ══════════════════════
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ══════════════════════
    LOBBY
    ══════════════════════ */
-.lobby-bg {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(201,146,42,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(122,63,26,0.15) 0%, transparent 60%),
-    repeating-linear-gradient(
-      45deg,
-      transparent 0px, transparent 18px,
-      rgba(201,146,42,0.03) 18px, rgba(201,146,42,0.03) 19px
-    ),
-    linear-gradient(160deg, #1a0800 0%, #3d1f0a 50%, #1a0800 100%);
-  z-index: 0;
-}
+    .lobby-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(201, 146, 42, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(122, 63, 26, 0.15) 0%, transparent 60%),
+        repeating-linear-gradient(45deg,
+          transparent 0px, transparent 18px,
+          rgba(201, 146, 42, 0.03) 18px, rgba(201, 146, 42, 0.03) 19px),
+        linear-gradient(160deg, #1a0800 0%, #3d1f0a 50%, #1a0800 100%);
+      z-index: 0;
+    }
 
-.lobby-content {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 28px;
-  padding: 20px;
-  width: 100%; max-width: 480px;
-}
+    .lobby-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+    }
 
-.logo-wrap { text-align: center; }
-.logo-icon {
-  font-size: 3rem;
-  color: var(--brass-light);
-  text-shadow: 0 0 30px rgba(201,146,42,0.6);
-  animation: iconSpin 8s linear infinite;
-  display: inline-block;
-}
-@keyframes iconSpin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+    .logo-wrap {
+      text-align: center;
+    }
 
-.logo-title {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(2.2rem, 8vw, 3.5rem);
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  color: var(--brass-light);
-  text-shadow: 0 2px 20px rgba(201,146,42,0.5), 0 0 60px rgba(201,146,42,0.2);
-  line-height: 1;
-  margin: 8px 0 4px;
-}
+    .logo-icon {
+      font-size: 3rem;
+      color: var(--brass-light);
+      text-shadow: 0 0 30px rgba(201, 146, 42, 0.6);
+      animation: iconSpin 8s linear infinite;
+      display: inline-block;
+    }
 
-.logo-sub {
-  font-size: 0.85rem;
-  letter-spacing: 0.35em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
+    @keyframes iconSpin {
+      0% {
+        transform: rotate(0)
+      }
 
-/* Lobby card */
-.lobby-card {
-  width: 100%;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 28px;
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 0 0 1px rgba(201,146,42,0.1),
-    0 20px 60px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(201,146,42,0.15);
-}
+      100% {
+        transform: rotate(360deg)
+      }
+    }
 
-.mode-tabs {
-  display: flex; gap: 4px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 8px; padding: 4px;
-  margin-bottom: 24px;
-}
-.mode-tab {
-  flex: 1; padding: 9px 12px;
-  border: none; border-radius: 5px;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: 'Cinzel', serif;
-  font-size: 0.78rem; font-weight: 600;
-  letter-spacing: 0.08em;
-  cursor: pointer; transition: all 0.2s;
-  text-transform: uppercase;
-}
-.mode-tab.active {
-  background: linear-gradient(135deg, var(--brass), var(--brass-light));
-  color: var(--ink);
-}
+    .logo-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.2rem, 8vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--brass-light);
+      text-shadow: 0 2px 20px rgba(201, 146, 42, 0.5), 0 0 60px rgba(201, 146, 42, 0.2);
+      line-height: 1;
+      margin: 8px 0 4px;
+    }
 
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+    .logo-sub {
+      font-size: 0.85rem;
+      letter-spacing: 0.35em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
 
-.input-group { margin-bottom: 14px; }
-.input-group label {
-  display: block;
-  font-size: 0.7rem; letter-spacing: 0.18em;
-  color: var(--text-muted); text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.input-group input {
-  width: 100%;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(201,146,42,0.25);
-  border-radius: 6px;
-  padding: 11px 14px;
-  color: var(--cream);
-  font-family: 'Crimson Pro', serif;
-  font-size: 1.05rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.input-group input:focus {
-  border-color: var(--brass);
-  box-shadow: 0 0 0 3px rgba(201,146,42,0.12);
-}
-.input-group input::placeholder { color: rgba(160,120,64,0.5); }
+    /* Lobby card */
+    .lobby-card {
+      width: 100%;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 28px;
+      backdrop-filter: blur(16px);
+      box-shadow:
+        0 0 0 1px rgba(201, 146, 42, 0.1),
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(201, 146, 42, 0.15);
+    }
 
-.divider {
-  display: flex; align-items: center; gap: 10px;
-  color: var(--text-muted); font-size: 0.8rem;
-  margin: 10px 0;
-}
-.divider::before, .divider::after {
-  content:''; flex:1;
-  height:1px; background: rgba(201,146,42,0.2);
-}
+    .mode-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
 
-/* Buttons */
-.btn {
-  width: 100%; padding: 12px 16px;
-  border: none; border-radius: 7px;
-  font-family: 'Cinzel', serif;
-  font-size: 0.82rem; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  cursor: pointer; transition: all 0.18s;
-  margin-bottom: 8px;
-  position: relative; overflow: hidden;
-}
-.btn:active { transform: scale(0.97); }
+    .mode-tab {
+      flex: 1;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
 
-.btn-primary {
-  background: linear-gradient(135deg, #b07818, #f0c060, #b07818);
-  color: var(--ink);
-  box-shadow: 0 4px 16px rgba(176,120,24,0.4);
-}
-.btn-primary:hover { box-shadow: 0 6px 24px rgba(240,192,96,0.5); filter: brightness(1.1); }
+    .mode-tab.active {
+      background: linear-gradient(135deg, var(--brass), var(--brass-light));
+      color: var(--ink);
+    }
 
-.btn-secondary {
-  background: rgba(201,146,42,0.12);
-  border: 1px solid rgba(201,146,42,0.4);
-  color: var(--brass-light);
-}
-.btn-secondary:hover { background: rgba(201,146,42,0.2); }
+    .tab-panel {
+      display: none;
+    }
 
-.btn-ghost {
-  background: transparent;
-  border: 1px solid rgba(201,146,42,0.2);
-  color: var(--text-muted);
-}
-.btn-ghost:hover { border-color: rgba(201,146,42,0.4); color: var(--cream); }
+    .tab-panel.active {
+      display: block;
+    }
 
-/* Room code */
-.room-code-box {
-  text-align: center;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(201,146,42,0.3);
-  border-radius: 8px; padding: 16px;
-  margin-bottom: 14px;
-}
-.room-code-label { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-.room-code-val {
-  font-family: 'Cinzel', serif; font-size: 2.5rem; font-weight: 700;
-  letter-spacing: 0.4em; color: var(--brass-light);
-  text-shadow: 0 0 20px rgba(201,146,42,0.5);
-}
-.room-code-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+    .input-group {
+      margin-bottom: 14px;
+    }
 
-.waiting-row {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; color: var(--text-muted); font-size: 0.9rem;
-  margin-bottom: 12px;
-}
-.spinner {
-  width: 16px; height: 16px;
-  border: 2px solid rgba(201,146,42,0.2);
-  border-top-color: var(--brass);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+    .input-group label {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
 
-.status-msg {
-  margin-top: 10px; padding: 10px 14px;
-  border-radius: 6px; font-size: 0.85rem; text-align: center;
-}
-.status-msg.info  { background: rgba(201,146,42,0.1); color: var(--brass-light); }
-.status-msg.error { background: rgba(212,32,32,0.12); color: #ff8060; }
-.status-msg.ok    { background: rgba(40,160,80,0.1);  color: #80e0a0; }
+    .input-group input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(201, 146, 42, 0.25);
+      border-radius: 6px;
+      padding: 11px 14px;
+      color: var(--cream);
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
 
-.lobby-footer {
-  font-size: 0.8rem; color: var(--text-muted);
-  letter-spacing: 0.08em; text-align: center;
-}
+    .input-group input:focus {
+      border-color: var(--brass);
+      box-shadow: 0 0 0 3px rgba(201, 146, 42, 0.12);
+    }
 
-/* ══════════════════════
+    .input-group input::placeholder {
+      color: rgba(160, 120, 64, 0.5);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin: 10px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(201, 146, 42, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 7px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.18s;
+      margin-bottom: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #b07818, #f0c060, #b07818);
+      color: var(--ink);
+      box-shadow: 0 4px 16px rgba(176, 120, 24, 0.4);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 24px rgba(240, 192, 96, 0.5);
+      filter: brightness(1.1);
+    }
+
+    .btn-secondary {
+      background: rgba(201, 146, 42, 0.12);
+      border: 1px solid rgba(201, 146, 42, 0.4);
+      color: var(--brass-light);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(201, 146, 42, 0.2);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(201, 146, 42, 0.2);
+      color: var(--text-muted);
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(201, 146, 42, 0.4);
+      color: var(--cream);
+    }
+
+    /* Room code */
+    .room-code-box {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(201, 146, 42, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .room-code-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .room-code-val {
+      font-family: 'Cinzel', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: 0.4em;
+      color: var(--brass-light);
+      text-shadow: 0 0 20px rgba(201, 146, 42, 0.5);
+    }
+
+    .room-code-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .waiting-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(201, 146, 42, 0.2);
+      border-top-color: var(--brass);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .status-msg {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .status-msg.info {
+      background: rgba(201, 146, 42, 0.1);
+      color: var(--brass-light);
+    }
+
+    .status-msg.error {
+      background: rgba(212, 32, 32, 0.12);
+      color: #ff8060;
+    }
+
+    .status-msg.ok {
+      background: rgba(40, 160, 80, 0.1);
+      color: #80e0a0;
+    }
+
+    .lobby-footer {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+
+    /* ══════════════════════
    GAME SCREEN
    ══════════════════════ */
-#gameScreen { justify-content: flex-start; padding: 0; overflow-y: auto; }
+    #gameScreen {
+      justify-content: flex-start;
+      padding: 0;
+      overflow-y: auto;
+    }
 
-.wood-bg {
-  position: fixed; inset: 0; z-index: 0;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"),
-    repeating-linear-gradient(
-      2deg,
-      transparent 0px, transparent 6px,
-      rgba(100,50,10,0.04) 6px, rgba(100,50,10,0.04) 7px
-    ),
-    repeating-linear-gradient(
-      88deg,
-      transparent 0px, transparent 40px,
-      rgba(80,30,5,0.03) 40px, rgba(80,30,5,0.03) 41px
-    ),
-    linear-gradient(170deg,
-      #2a1005 0%,
-      #5a2a0d 20%,
-      #4a2008 40%,
-      #6a3510 60%,
-      #3d1a06 80%,
-      #2a1005 100%
-    );
-}
+    .wood-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"),
+        repeating-linear-gradient(2deg,
+          transparent 0px, transparent 6px,
+          rgba(100, 50, 10, 0.04) 6px, rgba(100, 50, 10, 0.04) 7px),
+        repeating-linear-gradient(88deg,
+          transparent 0px, transparent 40px,
+          rgba(80, 30, 5, 0.03) 40px, rgba(80, 30, 5, 0.03) 41px),
+        linear-gradient(170deg,
+          #2a1005 0%,
+          #5a2a0d 20%,
+          #4a2008 40%,
+          #6a3510 60%,
+          #3d1a06 80%,
+          #2a1005 100%);
+    }
 
-/* Header */
-.game-header {
-  position: relative; z-index: 10;
-  width: 100%; max-width: 820px;
-  align-self: center;
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px 8px;
-}
+    /* Header */
+    .game-header {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 820px;
+      align-self: center;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px 8px;
+    }
 
-.header-title {
-  font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700;
-  letter-spacing: 0.25em; color: var(--brass-light);
-  text-shadow: 0 0 20px rgba(201,146,42,0.4);
-}
+    .header-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      color: var(--brass-light);
+      text-shadow: 0 0 20px rgba(201, 146, 42, 0.4);
+    }
 
-.net-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 0.72rem; color: var(--text-muted);
-  letter-spacing: 0.08em; margin-left: 10px;
-}
-.net-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #888;
-}
-.net-dot.local  { background: var(--brass); box-shadow: 0 0 5px var(--brass); }
-.net-dot.online { background: #40e080;      box-shadow: 0 0 5px #40e080; animation: dotPulse 2s ease-in-out infinite; }
-@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .net-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-left: 10px;
+    }
 
-.header-right { display: flex; gap: 8px; }
-.hbtn {
-  background: rgba(201,146,42,0.08);
-  border: 1px solid rgba(201,146,42,0.25);
-  border-radius: 6px; padding: 7px 14px;
-  color: var(--text-muted);
-  font-family: 'Cinzel', serif; font-size: 0.72rem;
-  font-weight: 600; letter-spacing: 0.08em;
-  cursor: pointer; transition: all 0.2s;
-}
-.hbtn:hover { border-color: var(--brass); color: var(--brass-light); }
+    .net-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #888;
+    }
 
-/* Players bar */
-.players-bar {
-  position: relative; z-index: 10;
-  width: 100%; max-width: 820px; align-self: center;
-  display: grid; grid-template-columns: 1fr auto 1fr;
-  gap: 10px; align-items: center;
-  padding: 0 20px 8px;
-}
+    .net-dot.local {
+      background: var(--brass);
+      box-shadow: 0 0 5px var(--brass);
+    }
 
-.player-card {
-  display: flex; align-items: center; gap: 10px;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(201,146,42,0.2);
-  border-radius: 10px; padding: 10px 14px;
-  transition: all 0.3s;
-  position: relative; overflow: hidden;
-}
-.player-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  transition: opacity 0.3s; opacity: 0;
-}
-.player-card.red-player::before  { background: linear-gradient(90deg, var(--red-bead), var(--red-bead-hi)); }
-.player-card.blue-player::before { background: linear-gradient(90deg, var(--blue-bead-hi), var(--blue-bead)); }
-.player-card.active::before { opacity: 1; }
-.player-card.active { border-color: rgba(201,146,42,0.5); background: rgba(0,0,0,0.6); }
+    .net-dot.online {
+      background: #40e080;
+      box-shadow: 0 0 5px #40e080;
+      animation: dotPulse 2s ease-in-out infinite;
+    }
 
-.player-bead-icon {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-}
-.red-bead-sm {
-  background: radial-gradient(circle at 35% 30%, var(--red-bead-hi), var(--red-bead), var(--red-bead-sh));
-  box-shadow: 0 2px 8px rgba(212,32,32,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
-}
-.blue-bead-sm {
-  background: radial-gradient(circle at 35% 30%, var(--blue-bead-hi), var(--blue-bead), var(--blue-bead-sh));
-  box-shadow: 0 2px 8px rgba(21,64,192,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
-}
+    @keyframes dotPulse {
 
-.player-info { flex: 1; min-width: 0; }
-.player-info.right { text-align: right; }
-.player-name {
-  font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 600;
-  color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.player-count { font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; }
+      0%,
+      100% {
+        opacity: 1
+      }
 
-.active-arrow {
-  font-size: 0.8rem; color: var(--brass-light);
-  opacity: 0; transition: opacity 0.3s;
-}
-.active-arrow.flip { transform: scaleX(-1); }
-.player-card.active .active-arrow { opacity: 1; animation: arrowBounce 0.8s ease-in-out infinite; }
-@keyframes arrowBounce { 0%,100%{transform:translateX(0)} 50%{transform:translateX(3px)} }
-.player-card.active .flip.active-arrow { animation: arrowBounceL 0.8s ease-in-out infinite; }
-@keyframes arrowBounceL { 0%,100%{transform:scaleX(-1) translateX(0)} 50%{transform:scaleX(-1) translateX(3px)} }
+      50% {
+        opacity: 0.5
+      }
+    }
 
-.turn-center { text-align: center; }
-.turn-label {
-  font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700;
-  letter-spacing: 0.1em; color: var(--brass-light); white-space: nowrap;
-}
-.timer-display {
-  font-family: 'Cinzel', serif; font-size: 1.4rem; font-weight: 700;
-  color: var(--cream); letter-spacing: 0.05em;
-}
-.timer-display.danger { color: #ff4040; animation: timerDanger 0.5s ease-in-out infinite; }
-@keyframes timerDanger { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .header-right {
+      display: flex;
+      gap: 8px;
+    }
 
-.capture-warning {
-  font-size: 0.7rem; letter-spacing: 0.1em;
-  color: #ff6040; font-weight: 600;
-  background: rgba(212,32,32,0.15);
-  border: 1px solid rgba(212,32,32,0.3);
-  border-radius: 4px; padding: 2px 6px;
-  white-space: nowrap; margin-top: 3px;
-  animation: warnPulse 0.6s ease-in-out infinite;
-}
-@keyframes warnPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-.capture-warning.hidden { display: none; }
+    .hbtn {
+      background: rgba(201, 146, 42, 0.08);
+      border: 1px solid rgba(201, 146, 42, 0.25);
+      border-radius: 6px;
+      padding: 7px 14px;
+      color: var(--text-muted);
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
 
-/* Board */
-.board-wrap {
-  position: relative; z-index: 5;
-  display: flex; align-items: center; justify-content: center;
-  padding: 10px 20px;
-  flex: 1;
-}
+    .hbtn:hover {
+      border-color: var(--brass);
+      color: var(--brass-light);
+    }
 
-#gameCanvas {
-  display: block;
-  border-radius: 8px;
-  cursor: pointer;
-  /* Canvas shadow handled in JS */
-}
+    /* Players bar */
+    .players-bar {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 820px;
+      align-self: center;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 0 20px 8px;
+    }
 
-/* Chat */
-.chat-bar {
-  position: relative; z-index: 10;
-  width: 100%; max-width: 820px; align-self: center;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(201,146,42,0.18);
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
-  margin-top: 4px;
-}
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(201, 146, 42, 0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
 
-.chat-messages {
-  height: 72px; overflow-y: auto;
-  padding: 8px 12px;
-  display: flex; flex-direction: column; gap: 3px;
-  scrollbar-width: thin; scrollbar-color: rgba(201,146,42,0.2) transparent;
-}
-.chat-msg { font-size: 0.82rem; line-height: 1.3; animation: msgIn 0.2s ease-out; }
-@keyframes msgIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
-.chat-msg .author { font-weight: 700; margin-right: 5px; }
-.chat-msg.system-msg { color: var(--text-muted); font-style: italic; }
-.chat-msg.p1-msg .author { color: #ff7060; }
-.chat-msg.p2-msg .author { color: #6090ff; }
+    .player-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
 
-.chat-input-row { display: flex; border-top: 1px solid rgba(201,146,42,0.15); }
-.chat-input-row input {
-  flex: 1; background: transparent; border: none;
-  padding: 9px 12px; color: var(--cream);
-  font-family: 'Crimson Pro', serif; font-size: 0.9rem; outline: none;
-}
-.chat-input-row button {
-  background: transparent; border: none;
-  border-left: 1px solid rgba(201,146,42,0.15);
-  padding: 9px 16px; color: var(--brass);
-  font-size: 1rem; cursor: pointer; transition: background 0.15s;
-}
-.chat-input-row button:hover { background: rgba(201,146,42,0.08); }
+    .player-card.red-player::before {
+      background: linear-gradient(90deg, var(--red-bead), var(--red-bead-hi));
+    }
 
-/* ── WIN OVERLAY ── */
-.overlay {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(10px);
-  display: flex; align-items: center; justify-content: center;
-  transition: opacity 0.3s;
-}
-.overlay.hidden { opacity: 0; pointer-events: none; }
+    .player-card.blue-player::before {
+      background: linear-gradient(90deg, var(--blue-bead-hi), var(--blue-bead));
+    }
 
-.win-card {
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px; padding: 50px 40px 36px;
-  text-align: center; max-width: 360px; width: 90%;
-  box-shadow: 0 0 80px rgba(201,146,42,0.12), 0 30px 80px rgba(0,0,0,0.6);
-  transform: scale(1); animation: winPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-}
-@keyframes winPop { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+    .player-card.active::before {
+      opacity: 1;
+    }
 
-.win-trophy { font-size: 4rem; display: block; margin-bottom: 8px; animation: trophyFloat 2s ease-in-out infinite; }
-@keyframes trophyFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-.win-subtitle { font-size: 0.75rem; letter-spacing: 0.35em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
-.win-name { font-family: 'Cinzel', serif; font-size: 1.9rem; font-weight: 700; color: var(--brass-light); text-shadow: 0 0 20px rgba(201,146,42,0.4); margin-bottom: 6px; }
-.win-reason { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px; }
-.win-btns { display: flex; flex-direction: column; gap: 8px; }
+    .player-card.active {
+      border-color: rgba(201, 146, 42, 0.5);
+      background: rgba(0, 0, 0, 0.6);
+    }
 
-/* TOAST */
-.toast {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%) translateY(16px);
-  background: rgba(10,4,0,0.92);
-  border: 1px solid rgba(201,146,42,0.3);
-  border-radius: 7px; padding: 10px 22px;
-  font-size: 0.88rem; color: var(--cream);
-  opacity: 0; transition: all 0.3s;
-  pointer-events: none; z-index: 200; white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .player-bead-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 600px) {
-  .players-bar { grid-template-columns: 1fr; gap: 6px; }
-  .turn-center { display: flex; flex-direction: row; align-items: center; gap: 12px; justify-content: center; }
-  .chat-messages { height: 55px; }
-  .win-card { padding: 36px 24px 28px; }
-}
+    .red-bead-sm {
+      background: radial-gradient(circle at 35% 30%, var(--red-bead-hi), var(--red-bead), var(--red-bead-sh));
+      box-shadow: 0 2px 8px rgba(212, 32, 32, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
 
-@media (max-width: 440px) {
-  .player-card { padding: 8px 10px; }
-  .player-bead-icon { width: 26px; height: 26px; }
-}
+    .blue-bead-sm {
+      background: radial-gradient(circle at 35% 30%, var(--blue-bead-hi), var(--blue-bead), var(--blue-bead-sh));
+      box-shadow: 0 2px 8px rgba(21, 64, 192, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
 
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,400&display=swap" rel="stylesheet">
+    .player-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-info.right {
+      text-align: right;
+    }
+
+    .player-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--cream);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .active-arrow {
+      font-size: 0.8rem;
+      color: var(--brass-light);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .active-arrow.flip {
+      transform: scaleX(-1);
+    }
+
+    .player-card.active .active-arrow {
+      opacity: 1;
+      animation: arrowBounce 0.8s ease-in-out infinite;
+    }
+
+    @keyframes arrowBounce {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      50% {
+        transform: translateX(3px)
+      }
+    }
+
+    .player-card.active .flip.active-arrow {
+      animation: arrowBounceL 0.8s ease-in-out infinite;
+    }
+
+    @keyframes arrowBounceL {
+
+      0%,
+      100% {
+        transform: scaleX(-1) translateX(0)
+      }
+
+      50% {
+        transform: scaleX(-1) translateX(3px)
+      }
+    }
+
+    .turn-center {
+      text-align: center;
+    }
+
+    .turn-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--brass-light);
+      white-space: nowrap;
+    }
+
+    .timer-display {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: 0.05em;
+    }
+
+    .timer-display.danger {
+      color: #ff4040;
+      animation: timerDanger 0.5s ease-in-out infinite;
+    }
+
+    @keyframes timerDanger {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    .capture-warning {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: #ff6040;
+      font-weight: 600;
+      background: rgba(212, 32, 32, 0.15);
+      border: 1px solid rgba(212, 32, 32, 0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      margin-top: 3px;
+      animation: warnPulse 0.6s ease-in-out infinite;
+    }
+
+    @keyframes warnPulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.6
+      }
+    }
+
+    .capture-warning.hidden {
+      display: none;
+    }
+
+    /* Board */
+    .board-wrap {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      flex: 1;
+    }
+
+    #gameCanvas {
+      display: block;
+      border-radius: 8px;
+      cursor: pointer;
+      /* Canvas shadow handled in JS */
+    }
+
+    /* Chat */
+    .chat-bar {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 820px;
+      align-self: center;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(201, 146, 42, 0.18);
+      border-radius: 10px 10px 0 0;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .chat-messages {
+      height: 72px;
+      overflow-y: auto;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(201, 146, 42, 0.2) transparent;
+    }
+
+    .chat-msg {
+      font-size: 0.82rem;
+      line-height: 1.3;
+      animation: msgIn 0.2s ease-out;
+    }
+
+    @keyframes msgIn {
+      from {
+        opacity: 0;
+        transform: translateY(3px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .chat-msg .author {
+      font-weight: 700;
+      margin-right: 5px;
+    }
+
+    .chat-msg.system-msg {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .chat-msg.p1-msg .author {
+      color: #ff7060;
+    }
+
+    .chat-msg.p2-msg .author {
+      color: #6090ff;
+    }
+
+    .chat-input-row {
+      display: flex;
+      border-top: 1px solid rgba(201, 146, 42, 0.15);
+    }
+
+    .chat-input-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 9px 12px;
+      color: var(--cream);
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .chat-input-row button {
+      background: transparent;
+      border: none;
+      border-left: 1px solid rgba(201, 146, 42, 0.15);
+      padding: 9px 16px;
+      color: var(--brass);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .chat-input-row button:hover {
+      background: rgba(201, 146, 42, 0.08);
+    }
+
+    /* ── WIN OVERLAY ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .win-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 50px 40px 36px;
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+      box-shadow: 0 0 80px rgba(201, 146, 42, 0.12), 0 30px 80px rgba(0, 0, 0, 0.6);
+      transform: scale(1);
+      animation: winPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes winPop {
+      from {
+        transform: scale(0.7);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .win-trophy {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: trophyFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes trophyFloat {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-8px)
+      }
+    }
+
+    .win-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 0.35em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .win-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--brass-light);
+      text-shadow: 0 0 20px rgba(201, 146, 42, 0.4);
+      margin-bottom: 6px;
+    }
+
+    .win-reason {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .win-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(10, 4, 0, 0.92);
+      border: 1px solid rgba(201, 146, 42, 0.3);
+      border-radius: 7px;
+      padding: 10px 22px;
+      font-size: 0.88rem;
+      color: var(--cream);
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 200;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .players-bar {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .turn-center {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+      }
+
+      .chat-messages {
+        height: 55px;
+      }
+
+      .win-card {
+        padding: 36px 24px 28px;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .player-card {
+        padding: 8px 10px;
+      }
+
+      .player-bead-icon {
+        width: 26px;
+        height: 26px;
+      }
+    }
+  </style>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,400&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
 
-<!-- ░░ LOBBY SCREEN ░░ -->
-<div id="lobbyScreen" class="screen">
-  <div class="lobby-bg"></div>
-  <div class="lobby-content">
-    <div class="logo-wrap">
-      <div class="logo-icon">⬡</div>
-      <h1 class="logo-title">12 BEADS</h1>
-      <p class="logo-sub">Traditional Line Board · 1v1</p>
-    </div>
-
-    <div class="lobby-card">
-      <div class="mode-tabs">
-        <button class="mode-tab active" data-tab="local">⚔ Pass &amp; Play</button>
-        <button class="mode-tab" data-tab="online">🌐 Online</button>
+  <!-- ░░ LOBBY SCREEN ░░ -->
+  <div id="lobbyScreen" class="screen">
+    <div class="lobby-bg"></div>
+    <div class="lobby-content">
+      <div class="logo-wrap">
+        <div class="logo-icon">⬡</div>
+        <h1 class="logo-title">12 BEADS</h1>
+        <p class="logo-sub">Traditional Line Board · 1v1</p>
       </div>
 
-      <!-- LOCAL -->
-      <div class="tab-panel active" id="tab-local">
-        <div class="input-group">
-          <label>🔴 Red Player</label>
-          <input type="text" id="localP1" placeholder="Red" maxlength="16">
+      <div class="lobby-card">
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-tab="local">⚔ Pass &amp; Play</button>
+          <button class="mode-tab" data-tab="online">🌐 Online</button>
         </div>
-        <div class="input-group">
-          <label>🔵 Blue Player</label>
-          <input type="text" id="localP2" placeholder="Blue" maxlength="16">
-        </div>
-        <button class="btn btn-primary" onclick="Game.startLocal()">Begin Match</button>
-      </div>
 
-      <!-- ONLINE -->
-      <div class="tab-panel" id="tab-online">
-        <div class="input-group">
-          <label>Your Name</label>
-          <input type="text" id="onlineName" placeholder="Enter name" maxlength="16">
-        </div>
-        <div id="onlineActions">
-          <button class="btn btn-primary" onclick="MP.createRoom()">Create Room</button>
-          <div class="divider"><span>or</span></div>
+        <!-- LOCAL -->
+        <div class="tab-panel active" id="tab-local">
           <div class="input-group">
-            <label>Room Code</label>
-            <input type="text" id="joinCode" placeholder="0000" maxlength="4" style="text-align:center;letter-spacing:0.4em;font-family:'Cinzel',serif;font-size:1.2rem">
+            <label>🔴 Red Player</label>
+            <input type="text" id="localP1" placeholder="Red" maxlength="16">
           </div>
-          <button class="btn btn-secondary" onclick="MP.joinRoom()">Join Room</button>
-        </div>
-        <div id="waitingPanel" style="display:none">
-          <div class="room-code-box">
-            <div class="room-code-label">Room Code</div>
-            <div class="room-code-val" id="displayCode">----</div>
-            <div class="room-code-hint">Share with your opponent</div>
+          <div class="input-group">
+            <label>🔵 Blue Player</label>
+            <input type="text" id="localP2" placeholder="Blue" maxlength="16">
           </div>
-          <div class="waiting-row"><div class="spinner"></div> Waiting for opponent…</div>
-          <button class="btn btn-ghost" onclick="MP.cancelRoom()">Cancel</button>
+          <button class="btn btn-primary" onclick="Game.startLocal()">Begin Match</button>
         </div>
-        <div id="statusMsg" style="display:none" class="status-msg"></div>
+
+        <!-- ONLINE -->
+        <div class="tab-panel" id="tab-online">
+          <div class="input-group">
+            <label>Your Name</label>
+            <input type="text" id="onlineName" placeholder="Enter name" maxlength="16">
+          </div>
+          <div id="onlineActions">
+            <button class="btn btn-primary" onclick="MP.createRoom()">Create Room</button>
+            <div class="divider"><span>or</span></div>
+            <div class="input-group">
+              <label>Room Code</label>
+              <input type="text" id="joinCode" placeholder="0000" maxlength="4"
+                style="text-align:center;letter-spacing:0.4em;font-family:'Cinzel',serif;font-size:1.2rem">
+            </div>
+            <button class="btn btn-secondary" onclick="MP.joinRoom()">Join Room</button>
+          </div>
+          <div id="waitingPanel" style="display:none">
+            <div class="room-code-box">
+              <div class="room-code-label">Room Code</div>
+              <div class="room-code-val" id="displayCode">----</div>
+              <div class="room-code-hint">Share with your opponent</div>
+            </div>
+            <div class="waiting-row">
+              <div class="spinner"></div> Waiting for opponent…
+            </div>
+            <button class="btn btn-ghost" onclick="MP.cancelRoom()">Cancel</button>
+          </div>
+          <div id="statusMsg" style="display:none" class="status-msg"></div>
+        </div>
+      </div>
+
+      <p class="lobby-footer">Two players · 12 beads each · Capture all to win</p>
+    </div>
+  </div>
+
+  <!-- ░░ GAME SCREEN ░░ -->
+  <div id="gameScreen" class="screen hidden">
+    <div class="wood-bg"></div>
+
+    <!-- Header -->
+    <header class="game-header">
+      <div class="header-left">
+        <span class="header-title">12 BEADS</span>
+        <span class="net-badge" id="netBadge"><span class="net-dot" id="netDot"></span><span
+            id="netLabel">Local</span></span>
+      </div>
+      <div class="header-right">
+        <button class="hbtn" onclick="Game.rematch()">↺ Rematch</button>
+        <button class="hbtn" onclick="Game.quit()">✕ Quit</button>
+      </div>
+    </header>
+
+    <!-- Player info row -->
+    <div class="players-bar">
+      <div class="player-card red-player" id="cardP1">
+        <div class="player-bead-icon red-bead-sm"></div>
+        <div class="player-info">
+          <div class="player-name" id="nameP1">Red</div>
+          <div class="player-count" id="countP1">12 beads</div>
+        </div>
+        <div class="active-arrow" id="arrowP1">▶</div>
+      </div>
+
+      <div class="turn-center">
+        <div class="turn-label" id="turnLabel">Red's Turn</div>
+        <div class="timer-display" id="timerDisplay">0:30</div>
+        <div class="capture-warning hidden" id="captureWarn">⚡ Must Capture!</div>
+      </div>
+
+      <div class="player-card blue-player" id="cardP2">
+        <div class="active-arrow flip" id="arrowP2">▶</div>
+        <div class="player-info right">
+          <div class="player-name" id="nameP2">Blue</div>
+          <div class="player-count" id="countP2">12 beads</div>
+        </div>
+        <div class="player-bead-icon blue-bead-sm"></div>
       </div>
     </div>
 
-    <p class="lobby-footer">Two players · 12 beads each · Capture all to win</p>
-  </div>
-</div>
-
-<!-- ░░ GAME SCREEN ░░ -->
-<div id="gameScreen" class="screen hidden">
-  <div class="wood-bg"></div>
-
-  <!-- Header -->
-  <header class="game-header">
-    <div class="header-left">
-      <span class="header-title">12 BEADS</span>
-      <span class="net-badge" id="netBadge"><span class="net-dot" id="netDot"></span><span id="netLabel">Local</span></span>
+    <!-- Board area -->
+    <div class="board-wrap">
+      <canvas id="gameCanvas"></canvas>
     </div>
-    <div class="header-right">
-      <button class="hbtn" onclick="Game.rematch()">↺ Rematch</button>
-      <button class="hbtn" onclick="Game.quit()">✕ Quit</button>
-    </div>
-  </header>
 
-  <!-- Player info row -->
-  <div class="players-bar">
-    <div class="player-card red-player" id="cardP1">
-      <div class="player-bead-icon red-bead-sm"></div>
-      <div class="player-info">
-        <div class="player-name" id="nameP1">Red</div>
-        <div class="player-count" id="countP1">12 beads</div>
+    <!-- Chat -->
+    <div class="chat-bar" id="chatBar">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Say something…" maxlength="100"
+          onkeydown="if(event.key==='Enter')Game.sendChat()">
+        <button onclick="Game.sendChat()">→</button>
       </div>
-      <div class="active-arrow" id="arrowP1">▶</div>
     </div>
+  </div>
 
-    <div class="turn-center">
-      <div class="turn-label" id="turnLabel">Red's Turn</div>
-      <div class="timer-display" id="timerDisplay">0:30</div>
-      <div class="capture-warning hidden" id="captureWarn">⚡ Must Capture!</div>
-    </div>
-
-    <div class="player-card blue-player" id="cardP2">
-      <div class="active-arrow flip" id="arrowP2">▶</div>
-      <div class="player-info right">
-        <div class="player-name" id="nameP2">Blue</div>
-        <div class="player-count" id="countP2">12 beads</div>
+  <!-- ░░ WIN OVERLAY ░░ -->
+  <div id="winOverlay" class="overlay hidden">
+    <div class="win-card">
+      <div class="win-trophy">🏆</div>
+      <div class="win-subtitle">Victory!</div>
+      <div class="win-name" id="winName">Red Player</div>
+      <div class="win-reason" id="winReason">All beads captured</div>
+      <div class="win-btns">
+        <button class="btn btn-primary" onclick="Game.rematch()">↺ Play Again</button>
+        <button class="btn btn-ghost" onclick="Game.quit()">Back to Menu</button>
       </div>
-      <div class="player-bead-icon blue-bead-sm"></div>
     </div>
   </div>
 
-  <!-- Board area -->
-  <div class="board-wrap">
-    <canvas id="gameCanvas"></canvas>
-  </div>
+  <!-- ░░ TOAST ░░ -->
+  <div id="toast" class="toast"></div>
 
-  <!-- Chat -->
-  <div class="chat-bar" id="chatBar">
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input-row">
-      <input type="text" id="chatInput" placeholder="Say something…" maxlength="100"
-             onkeydown="if(event.key==='Enter')Game.sendChat()">
-      <button onclick="Game.sendChat()">→</button>
-    </div>
-  </div>
-</div>
+  <script>
 
-<!-- ░░ WIN OVERLAY ░░ -->
-<div id="winOverlay" class="overlay hidden">
-  <div class="win-card">
-    <div class="win-trophy">🏆</div>
-    <div class="win-subtitle">Victory!</div>
-    <div class="win-name" id="winName">Red Player</div>
-    <div class="win-reason" id="winReason">All beads captured</div>
-    <div class="win-btns">
-      <button class="btn btn-primary" onclick="Game.rematch()">↺ Play Again</button>
-      <button class="btn btn-ghost" onclick="Game.quit()">Back to Menu</button>
-    </div>
-  </div>
-</div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsJ8efSKDBgYn8OiOBYrmKUPXLbIvEMxA",
+      authDomain: "bead-8d188.firebaseapp.com",
+      databaseURL: "https://bead-8d188-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bead-8d188",
+      storageBucket: "bead-8d188.firebasestorage.app",
+      messagingSenderId: "840499803386",
+      appId: "1:840499803386:web:c2ff0af8eec0eecc3b0543",
+      measurementId: "G-XWD3LFRPNT"
+    };
 
-<!-- ░░ TOAST ░░ -->
-<div id="toast" class="toast"></div>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    /* ══════════════════════════════════════════════════════════════
+       12 BEADS — script.js
+       Line-intersection board (graph-based), HD canvas rendering,
+       full game logic + BroadcastChannel multiplayer
+       ══════════════════════════════════════════════════════════════ */
 
-<script>
-/* ══════════════════════════════════════════════════════════════
-   12 BEADS — script.js
-   Line-intersection board (graph-based), HD canvas rendering,
-   full game logic + BroadcastChannel multiplayer
-   ══════════════════════════════════════════════════════════════ */
+    'use strict';
 
-'use strict';
+    /* ──────────────────────────────────────────
+       BOARD GRAPH DEFINITION
+       Traditional 12-Beads board:
+       5×5 grid of intersection nodes (25 total),
+       plus diagonal connections on dark squares.
+       Nodes indexed 0-24, row-major (row 0 = top).
+    
+       Layout reference (rows 0-4, cols 0-4):
+         0  1  2  3  4
+         5  6  7  8  9
+        10 11 12 13 14
+        15 16 17 18 19
+        20 21 22 23 24
+    
+       Starting positions:
+         P1 (Red)  → rows 0-1 (nodes 0-9) + top of row 2 (10,12,14) = 12 beads
+         P2 (Blue) → rows 3-4 (nodes 15-24) + bottom of row 2 (10,12,14)? 
+       
+       Classical Dama-on-lines variant:
+         P1 (Red)  → nodes 0..11  (rows 0,1, left half row2)
+         P2 (Blue) → nodes 13..24 (rows 3,4, right half row2)
+       
+       Actually we'll use:
+         P1 → 12 nodes in top 3 half-rows
+         P2 → 12 nodes in bottom 3 half-rows
+       
+       Precise starting positions for 25-node 5×5:
+         P1 occupies: row0 (5) + row1 (5) + row2 first two (2) = 12  → 0,1,2,3,4,5,6,7,8,9,10,11
+         P2 occupies: row2 last two + row3 + row4 = 12              → 13,14,15,16,17,18,19,20,21,22,23,24
+         Node 12 (center) is empty at start.
+       ────────────────────────────────────────── */
 
-/* ──────────────────────────────────────────
-   BOARD GRAPH DEFINITION
-   Traditional 12-Beads board:
-   5×5 grid of intersection nodes (25 total),
-   plus diagonal connections on dark squares.
-   Nodes indexed 0-24, row-major (row 0 = top).
+    const NODES = 25;
 
-   Layout reference (rows 0-4, cols 0-4):
-     0  1  2  3  4
-     5  6  7  8  9
-    10 11 12 13 14
-    15 16 17 18 19
-    20 21 22 23 24
+    // Build adjacency list
+    function buildGraph() {
+      const adj = Array.from({ length: NODES }, () => []);
+      const R = 5, C = 5;
 
-   Starting positions:
-     P1 (Red)  → rows 0-1 (nodes 0-9) + top of row 2 (10,12,14) = 12 beads
-     P2 (Blue) → rows 3-4 (nodes 15-24) + bottom of row 2 (10,12,14)? 
-   
-   Classical Dama-on-lines variant:
-     P1 (Red)  → nodes 0..11  (rows 0,1, left half row2)
-     P2 (Blue) → nodes 13..24 (rows 3,4, right half row2)
-   
-   Actually we'll use:
-     P1 → 12 nodes in top 3 half-rows
-     P2 → 12 nodes in bottom 3 half-rows
-   
-   Precise starting positions for 25-node 5×5:
-     P1 occupies: row0 (5) + row1 (5) + row2 first two (2) = 12  → 0,1,2,3,4,5,6,7,8,9,10,11
-     P2 occupies: row2 last two + row3 + row4 = 12              → 13,14,15,16,17,18,19,20,21,22,23,24
-     Node 12 (center) is empty at start.
-   ────────────────────────────────────────── */
-
-const NODES = 25;
-
-// Build adjacency list
-function buildGraph() {
-  const adj = Array.from({length: NODES}, () => []);
-  const R = 5, C = 5;
-
-  function id(r, c) { return r * C + c; }
-  function add(a, b) {
-    if (!adj[a].includes(b)) adj[a].push(b);
-    if (!adj[b].includes(a)) adj[b].push(a);
-  }
-
-  for (let r = 0; r < R; r++) {
-    for (let c = 0; c < C; c++) {
-      // Horizontal
-      if (c + 1 < C) add(id(r,c), id(r,c+1));
-      // Vertical
-      if (r + 1 < R) add(id(r,c), id(r+1,c));
-      // Diagonals on "dark" squares (sum of r+c is even) going down-right
-      if ((r + c) % 2 === 0) {
-        if (r+1 < R && c+1 < C) add(id(r,c), id(r+1,c+1));
-        if (r+1 < R && c-1 >= 0) add(id(r,c), id(r+1,c-1));
+      function id(r, c) { return r * C + c; }
+      function add(a, b) {
+        if (!adj[a].includes(b)) adj[a].push(b);
+        if (!adj[b].includes(a)) adj[b].push(a);
       }
+
+      for (let r = 0; r < R; r++) {
+        for (let c = 0; c < C; c++) {
+          // Horizontal
+          if (c + 1 < C) add(id(r, c), id(r, c + 1));
+          // Vertical
+          if (r + 1 < R) add(id(r, c), id(r + 1, c));
+          // Diagonals on "dark" squares (sum of r+c is even) going down-right
+          if ((r + c) % 2 === 0) {
+            if (r + 1 < R && c + 1 < C) add(id(r, c), id(r + 1, c + 1));
+            if (r + 1 < R && c - 1 >= 0) add(id(r, c), id(r + 1, c - 1));
+          }
+        }
+      }
+      return adj;
     }
-  }
-  return adj;
-}
 
-const GRAPH = buildGraph();
+    const GRAPH = buildGraph();
 
-// Node coordinates (grid positions)
-const NODE_GRID = Array.from({length: NODES}, (_, i) => ({
-  row: Math.floor(i / 5),
-  col: i % 5
-}));
+    // Node coordinates (grid positions)
+    const NODE_GRID = Array.from({ length: NODES }, (_, i) => ({
+      row: Math.floor(i / 5),
+      col: i % 5
+    }));
 
-// Starting positions
-const P1_START = [0,1,2,3,4,5,6,7,8,9,10,11];
-const P2_START = [13,14,15,16,17,18,19,20,21,22,23,24];
-// Node 12 = center, starts empty
+    // Starting positions
+    const P1_START = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    const P2_START = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+    // Node 12 = center, starts empty
 
-/* ──────────────────────────────────────────
-   SOUND ENGINE
-   ────────────────────────────────────────── */
-const SFX = (() => {
-  let ctx = null;
-  const get = () => {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    return ctx;
-  };
-  const tone = (freq, dur, type='sine', vol=0.12, detune=0) => {
-    try {
-      const ac = get(), o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = type; o.frequency.value = freq; o.detune.value = detune;
-      g.gain.setValueAtTime(vol, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
-      o.start(); o.stop(ac.currentTime + dur);
-    } catch(e){}
-  };
-  return {
-    select()  { tone(520, 0.08, 'sine', 0.1); },
-    move()    { tone(380, 0.09, 'sine', 0.1); tone(460, 0.07, 'sine', 0.07); },
-    capture() { tone(220, 0.12, 'sawtooth', 0.1); setTimeout(()=>tone(180,0.09,'sine',0.07), 80); },
-    error()   { tone(160, 0.1, 'sawtooth', 0.08); },
-    win()     { [262,330,392,523,660].forEach((f,i)=>setTimeout(()=>tone(f,0.25,'sine',0.12),i*90)); },
-    chat()    { tone(800, 0.04, 'sine', 0.05); },
-    king()    { [440,554,660,880].forEach((f,i)=>setTimeout(()=>tone(f,0.15,'sine',0.1),i*70)); }
-  };
-})();
+    /* ──────────────────────────────────────────
+       SOUND ENGINE
+       ────────────────────────────────────────── */
+    const SFX = (() => {
+      let ctx = null;
+      const get = () => {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        return ctx;
+      };
+      const tone = (freq, dur, type = 'sine', vol = 0.12, detune = 0) => {
+        try {
+          const ac = get(), o = ac.createOscillator(), g = ac.createGain();
+          o.connect(g); g.connect(ac.destination);
+          o.type = type; o.frequency.value = freq; o.detune.value = detune;
+          g.gain.setValueAtTime(vol, ac.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+          o.start(); o.stop(ac.currentTime + dur);
+        } catch (e) { }
+      };
+      return {
+        select() { tone(520, 0.08, 'sine', 0.1); },
+        move() { tone(380, 0.09, 'sine', 0.1); tone(460, 0.07, 'sine', 0.07); },
+        capture() { tone(220, 0.12, 'sawtooth', 0.1); setTimeout(() => tone(180, 0.09, 'sine', 0.07), 80); },
+        error() { tone(160, 0.1, 'sawtooth', 0.08); },
+        win() { [262, 330, 392, 523, 660].forEach((f, i) => setTimeout(() => tone(f, 0.25, 'sine', 0.12), i * 90)); },
+        chat() { tone(800, 0.04, 'sine', 0.05); },
+        king() { [440, 554, 660, 880].forEach((f, i) => setTimeout(() => tone(f, 0.15, 'sine', 0.1), i * 70)); }
+      };
+    })();
 
-document.body.addEventListener('click', ()=>{ try{ new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }, {once:true});
+    document.body.addEventListener('click', () => { try { new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } }, { once: true });
 
-/* ──────────────────────────────────────────
-   TOAST
-   ────────────────────────────────────────── */
-let toastTimer;
-function showToast(msg, dur=2500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), dur);
-}
-
-/* ──────────────────────────────────────────
-   CHAT
-   ────────────────────────────────────────── */
-function addChat(cls, author, text) {
-  const box = document.getElementById('chatMessages');
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + cls;
-  if (author) {
-    const sp = document.createElement('span');
-    sp.className = 'author';
-    sp.textContent = author + ':';
-    div.appendChild(sp);
-    div.appendChild(document.createTextNode(text));
-  } else {
-    div.textContent = text;
-  }
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  if (cls !== 'system-msg') SFX.chat();
-}
-
-/* ──────────────────────────────────────────
-   TAB NAVIGATION
-   ────────────────────────────────────────── */
-document.querySelectorAll('.mode-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
-  });
-});
-
-/* ══════════════════════════════════════════
-   CANVAS RENDERER
-   ══════════════════════════════════════════ */
-const Renderer = (() => {
-  let canvas, ctx, W, H, CELL, OX, OY;
-  const COLS = 5, ROWS = 5;
-
-  // Animation state
-  let animPiece = null; // { nodeFrom, nodeTo, progress, player }
-  let captureFlash = []; // [{node, t}]
-  let animReq = null;
-
-  function init() {
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    resize();
-    window.addEventListener('resize', resize);
-    canvas.addEventListener('click', onCanvasClick);
-    canvas.addEventListener('mousemove', onMouseMove);
-    canvas.addEventListener('mouseleave', ()=>{ hoverNode=-1; draw(); });
-  }
-
-  function resize() {
-    const wrap = document.querySelector('.board-wrap');
-    const wrapW = wrap.clientWidth - 40;
-    const wrapH = wrap.clientHeight - 20;
-    const size = Math.min(wrapW, wrapH, 600);
-    canvas.width  = size;
-    canvas.height = size;
-    canvas.style.width  = size + 'px';
-    canvas.style.height = size + 'px';
-    W = H = size;
-    CELL = size / (COLS + 1);
-    OX = CELL;
-    OY = CELL;
-    draw();
-  }
-
-  function nodePos(n) {
-    const {row, col} = NODE_GRID[n];
-    return { x: OX + col * CELL, y: OY + row * CELL };
-  }
-
-  let hoverNode = -1;
-
-  function onMouseMove(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const my = (e.clientY - rect.top)  * (canvas.height / rect.height);
-    let closest = -1, minD = CELL * 0.55;
-    for (let n = 0; n < NODES; n++) {
-      const {x,y} = nodePos(n);
-      const d = Math.hypot(mx-x, my-y);
-      if (d < minD) { minD=d; closest=n; }
+    /* ──────────────────────────────────────────
+       TOAST
+       ────────────────────────────────────────── */
+    let toastTimer;
+    function showToast(msg, dur = 2500) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), dur);
     }
-    if (closest !== hoverNode) { hoverNode=closest; draw(); }
-  }
 
-  function onCanvasClick(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const my = (e.clientY - rect.top)  * (canvas.height / rect.height);
-    let closest = -1, minD = CELL * 0.6;
-    for (let n = 0; n < NODES; n++) {
-      const {x,y} = nodePos(n);
-      const d = Math.hypot(mx-x, my-y);
-      if (d < minD) { minD=d; closest=n; }
+    /* ──────────────────────────────────────────
+       CHAT
+       ────────────────────────────────────────── */
+    function addChat(cls, author, text) {
+      const box = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + cls;
+      if (author) {
+        const sp = document.createElement('span');
+        sp.className = 'author';
+        sp.textContent = author + ':';
+        div.appendChild(sp);
+        div.appendChild(document.createTextNode(text));
+      } else {
+        div.textContent = text;
+      }
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      if (cls !== 'system-msg') SFX.chat();
     }
-    if (closest !== -1) Game.onNodeClick(closest);
-  }
 
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    drawBoardSurface();
-    drawLines();
-    drawNodes();
-    drawHighlights();
-    drawPieces();
-  }
+    /* ──────────────────────────────────────────
+       TAB NAVIGATION
+       ────────────────────────────────────────── */
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
 
-  function drawBoardSurface() {
-    // Rounded board with wood gradient
-    const r = 12;
-    const pad = CELL * 0.5;
-    const bx = OX - pad, by = OY - pad;
-    const bw = (COLS-1)*CELL + pad*2, bh = (ROWS-1)*CELL + pad*2;
+    /* ══════════════════════════════════════════
+       CANVAS RENDERER
+       ══════════════════════════════════════════ */
+    const Renderer = (() => {
+      let canvas, ctx, W, H, CELL, OX, OY;
+      const COLS = 5, ROWS = 5;
 
-    // Shadow
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
-    ctx.shadowBlur  = 30;
-    ctx.shadowOffsetY = 8;
+      // Animation state
+      let animPiece = null; // { nodeFrom, nodeTo, progress, player }
+      let captureFlash = []; // [{node, t}]
+      let animReq = null;
 
-    // Board fill
-    const g = ctx.createLinearGradient(bx, by, bx+bw, by+bh);
-    g.addColorStop(0,   '#c8783a');
-    g.addColorStop(0.3, '#b86820');
-    g.addColorStop(0.6, '#d08840');
-    g.addColorStop(1,   '#a05818');
-    roundRect(ctx, bx, by, bw, bh, r);
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.restore();
+      function init() {
+        canvas = document.getElementById('gameCanvas');
+        ctx = canvas.getContext('2d');
+        resize();
+        window.addEventListener('resize', resize);
+        canvas.addEventListener('click', onCanvasClick);
+        canvas.addEventListener('mousemove', onMouseMove);
+        canvas.addEventListener('mouseleave', () => { hoverNode = -1; draw(); });
+      }
 
-    // Grain lines
-    ctx.save();
-    ctx.globalAlpha = 0.06;
-    for (let i = 0; i < 30; i++) {
-      const gy = by + (bh/30)*i + Math.sin(i*1.3)*4;
-      ctx.strokeStyle = '#1a0800';
-      ctx.lineWidth = 0.5 + Math.random()*0.8;
-      ctx.beginPath(); ctx.moveTo(bx, gy); ctx.lineTo(bx+bw, gy+Math.sin(i)*6); ctx.stroke();
-    }
-    ctx.restore();
+      function resize() {
+        const wrap = document.querySelector('.board-wrap');
+        const wrapW = wrap.clientWidth - 40;
+        const wrapH = wrap.clientHeight - 20;
+        const size = Math.min(wrapW, wrapH, 600);
+        canvas.width = size;
+        canvas.height = size;
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+        W = H = size;
+        CELL = size / (COLS + 1);
+        OX = CELL;
+        OY = CELL;
+        draw();
+      }
 
-    // Border frame
-    ctx.save();
-    const frame = ctx.createLinearGradient(bx, by, bx+bw, by+bh);
-    frame.addColorStop(0, '#f0c060');
-    frame.addColorStop(0.5, '#c09030');
-    frame.addColorStop(1, '#f0c060');
-    roundRect(ctx, bx, by, bw, bh, r);
-    ctx.strokeStyle = frame;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.restore();
+      function nodePos(n) {
+        const { row, col } = NODE_GRID[n];
+        return { x: OX + col * CELL, y: OY + row * CELL };
+      }
 
-    // Inner border inset
-    ctx.save();
-    roundRect(ctx, bx+5, by+5, bw-10, bh-10, r-3);
-    ctx.strokeStyle = 'rgba(255,200,80,0.15)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
-  }
+      let hoverNode = -1;
 
-  function roundRect(c, x, y, w, h, r) {
-    c.beginPath();
-    c.moveTo(x+r, y);
-    c.lineTo(x+w-r, y); c.quadraticCurveTo(x+w, y, x+w, y+r);
-    c.lineTo(x+w, y+h-r); c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-    c.lineTo(x+r, y+h); c.quadraticCurveTo(x, y+h, x, y+h-r);
-    c.lineTo(x, y+r); c.quadraticCurveTo(x, y, x+r, y);
-    c.closePath();
-  }
+      function onMouseMove(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+        let closest = -1, minD = CELL * 0.55;
+        for (let n = 0; n < NODES; n++) {
+          const { x, y } = nodePos(n);
+          const d = Math.hypot(mx - x, my - y);
+          if (d < minD) { minD = d; closest = n; }
+        }
+        if (closest !== hoverNode) { hoverNode = closest; draw(); }
+      }
 
-  function drawLines() {
-    const drawn = new Set();
-    ctx.lineWidth = 2.2;
-    ctx.lineCap = 'round';
+      function onCanvasClick(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+        let closest = -1, minD = CELL * 0.6;
+        for (let n = 0; n < NODES; n++) {
+          const { x, y } = nodePos(n);
+          const d = Math.hypot(mx - x, my - y);
+          if (d < minD) { minD = d; closest = n; }
+        }
+        if (closest !== -1) Game.onNodeClick(closest);
+      }
 
-    for (let a = 0; a < NODES; a++) {
-      for (const b of GRAPH[a]) {
-        const key = Math.min(a,b)*100 + Math.max(a,b);
-        if (drawn.has(key)) continue;
-        drawn.add(key);
-        const pa = nodePos(a), pb = nodePos(b);
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        drawBoardSurface();
+        drawLines();
+        drawNodes();
+        drawHighlights();
+        drawPieces();
+      }
 
-        // Subtle glow under line
+      function drawBoardSurface() {
+        // Rounded board with wood gradient
+        const r = 12;
+        const pad = CELL * 0.5;
+        const bx = OX - pad, by = OY - pad;
+        const bw = (COLS - 1) * CELL + pad * 2, bh = (ROWS - 1) * CELL + pad * 2;
+
+        // Shadow
         ctx.save();
-        ctx.strokeStyle = 'rgba(255,200,80,0.08)';
-        ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 30;
+        ctx.shadowOffsetY = 8;
+
+        // Board fill
+        const g = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+        g.addColorStop(0, '#c8783a');
+        g.addColorStop(0.3, '#b86820');
+        g.addColorStop(0.6, '#d08840');
+        g.addColorStop(1, '#a05818');
+        roundRect(ctx, bx, by, bw, bh, r);
+        ctx.fillStyle = g;
+        ctx.fill();
         ctx.restore();
 
-        // Main line
-        ctx.strokeStyle = 'rgba(26,8,0,0.75)';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
-      }
-    }
-  }
-
-  function drawNodes() {
-    for (let n = 0; n < NODES; n++) {
-      const {x, y} = nodePos(n);
-      const r = CELL * 0.09;
-
-      // Carved circle
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(10,3,0,0.7)';
-      ctx.fill();
-
-      ctx.beginPath(); ctx.arc(x, y, r*0.6, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,200,80,0.2)';
-      ctx.fill();
-    }
-  }
-
-  function drawHighlights() {
-    const gs = Game.state;
-    if (!gs) return;
-
-    // Valid moves
-    for (const n of (gs.validMoves||[])) {
-      const {x,y} = nodePos(n);
-      const isCapture = (gs.captures||[]).includes(n);
-
-      // Outer ring
-      ctx.save();
-      ctx.beginPath(); ctx.arc(x, y, CELL*0.28, 0, Math.PI*2);
-      ctx.strokeStyle = isCapture ? 'rgba(255,80,40,0.9)' : 'rgba(255,220,80,0.9)';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([5,3]);
-      ctx.stroke();
-      ctx.restore();
-
-      // Inner dot
-      ctx.beginPath(); ctx.arc(x, y, CELL*0.1, 0, Math.PI*2);
-      ctx.fillStyle = isCapture ? 'rgba(255,80,40,0.6)' : 'rgba(255,220,80,0.6)';
-      ctx.fill();
-
-      // Glow
-      ctx.save();
-      ctx.shadowColor = isCapture ? 'rgba(255,80,40,0.8)' : 'rgba(255,220,80,0.8)';
-      ctx.shadowBlur = 14;
-      ctx.beginPath(); ctx.arc(x, y, CELL*0.14, 0, Math.PI*2);
-      ctx.fillStyle = 'transparent'; ctx.fill();
-      ctx.restore();
-    }
-
-    // Hover
-    if (hoverNode !== -1) {
-      const {x,y} = nodePos(hoverNode);
-      ctx.save();
-      ctx.globalAlpha = 0.3;
-      ctx.beginPath(); ctx.arc(x, y, CELL*0.32, 0, Math.PI*2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // Capture flash
-    for (const cf of captureFlash) {
-      const {x,y} = nodePos(cf.node);
-      ctx.save();
-      ctx.globalAlpha = cf.t * 0.8;
-      ctx.beginPath(); ctx.arc(x, y, CELL*0.38*(1-cf.t*0.3), 0, Math.PI*2);
-      ctx.fillStyle = '#ff4020';
-      ctx.shadowColor = '#ff4020';
-      ctx.shadowBlur = 20;
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  function drawPieces() {
-    const gs = Game.state;
-    if (!gs) return;
-    const board = gs.board;
-
-    // Animated moving piece
-    const animNode = animPiece ? animPiece.nodeTo : -1;
-
-    for (let n = 0; n < NODES; n++) {
-      const piece = board[n];
-      if (!piece) continue;
-      if (n === animNode && animPiece) continue; // drawn separately
-
-      const {x, y} = nodePos(n);
-      const selected = gs.selected === n;
-      const r = CELL * 0.32;
-      drawBead(x, y, r, piece.player, selected, piece.king);
-    }
-
-    // Draw animating piece
-    if (animPiece) {
-      const pa = nodePos(animPiece.nodeFrom);
-      const pb = nodePos(animPiece.nodeTo);
-      const t  = animPiece.progress;
-      const et = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; // ease in-out cubic
-      const x  = pa.x + (pb.x - pa.x) * et;
-      const y  = pa.y + (pb.y - pa.y) * et - Math.sin(t*Math.PI)*CELL*0.3; // arc
-      const r  = CELL * 0.32;
-      drawBead(x, y, r, animPiece.player, false, animPiece.king);
-    }
-  }
-
-  function drawBead(x, y, r, player, selected, king) {
-    const isRed = player === 1;
-    const hi  = isRed ? '#ff8060' : '#6090ff';
-    const mid = isRed ? '#d42020' : '#1540c0';
-    const sh  = isRed ? '#6a0808' : '#091a60';
-    const shC = isRed ? 'rgba(212,32,32,0.6)' : 'rgba(21,64,192,0.6)';
-
-    ctx.save();
-
-    // Selected glow
-    if (selected) {
-      ctx.shadowColor = isRed ? 'rgba(255,80,40,1)' : 'rgba(60,120,255,1)';
-      ctx.shadowBlur  = 22;
-      // Outer ring
-      ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2);
-      ctx.strokeStyle = isRed ? 'rgba(255,100,60,0.8)' : 'rgba(80,140,255,0.8)';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-    } else {
-      ctx.shadowColor = shC;
-      ctx.shadowBlur  = 8;
-      ctx.shadowOffsetY = 3;
-    }
-
-    // Bead body
-    const g = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.05, x, y, r);
-    g.addColorStop(0,   hi);
-    g.addColorStop(0.4, mid);
-    g.addColorStop(1,   sh);
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-    ctx.fillStyle = g;
-    ctx.fill();
-
-    // Specular highlight
-    ctx.beginPath(); ctx.ellipse(x-r*0.25, y-r*0.28, r*0.28, r*0.18, -0.5, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fill();
-
-    // Tiny bottom reflect
-    ctx.beginPath(); ctx.ellipse(x+r*0.1, y+r*0.5, r*0.15, r*0.07, 0, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.fill();
-
-    // King crown
-    if (king) {
-      ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 10;
-      ctx.fillStyle = '#ffd700';
-      ctx.font = `bold ${r*0.9}px serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('♛', x, y+1);
-    }
-
-    ctx.restore();
-  }
-
-  // Animate piece movement
-  function animateMove(from, to, player, king, onDone) {
-    if (animReq) cancelAnimationFrame(animReq);
-    animPiece = { nodeFrom: from, nodeTo: to, player, king, progress: 0 };
-    const DURATION = 300;
-    let start = null;
-    function step(ts) {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / DURATION, 1);
-      animPiece.progress = p;
-      draw();
-      if (p < 1) animReq = requestAnimationFrame(step);
-      else {
-        animPiece = null;
-        animReq = null;
-        draw();
-        if (onDone) onDone();
-      }
-    }
-    animReq = requestAnimationFrame(step);
-  }
-
-  // Flash capture at node
-  function flashCapture(node) {
-    captureFlash.push({ node, t: 1.0 });
-    let last = null;
-    const fade = (ts) => {
-      if (!last) last = ts;
-      const dt = (ts - last) / 1000;
-      last = ts;
-      let alive = false;
-      for (const cf of captureFlash) {
-        cf.t -= dt * 2.5;
-        if (cf.t > 0) alive = true;
-      }
-      captureFlash = captureFlash.filter(cf => cf.t > 0);
-      draw();
-      if (alive) requestAnimationFrame(fade);
-    };
-    requestAnimationFrame(fade);
-  }
-
-  return { init, resize, draw, animateMove, flashCapture, nodePos };
-})();
-
-/* ══════════════════════════════════════════
-   TIMER
-   ══════════════════════════════════════════ */
-const Timer = (() => {
-  let interval = null;
-  let seconds = 30;
-  const LIMIT = 30;
-
-  function reset() {
-    clearInterval(interval);
-    seconds = LIMIT;
-    update();
-  }
-  function start(onExpire) {
-    reset();
-    interval = setInterval(() => {
-      seconds--;
-      update();
-      if (seconds <= 0) {
-        clearInterval(interval);
-        if (onExpire) onExpire();
-      }
-    }, 1000);
-  }
-  function stop() { clearInterval(interval); }
-  function update() {
-    const el = document.getElementById('timerDisplay');
-    const s  = Math.max(0, seconds);
-    el.textContent = `0:${s.toString().padStart(2,'0')}`;
-    el.classList.toggle('danger', s <= 8);
-  }
-  return { reset, start, stop };
-})();
-
-/* ══════════════════════════════════════════
-   GAME LOGIC
-   ══════════════════════════════════════════ */
-const Game = (() => {
-  let _state = null;
-  let _isOnline = false;
-  let _myPlayer = null;
-  let _waiting = false; // waiting for animation
-
-  // State shape:
-  // board: Array[25] of null | { player:1|2, king:bool }
-  // turn: 1|2
-  // selected: null | nodeIndex
-  // validMoves: []  (node indices reachable from selected)
-  // captures: []    (subset of validMoves that are captures)
-  // forcedPieces: [] (node indices with mandatory captures)
-  // multi: bool     (multi-jump in progress)
-  // p1name, p2name: string
-  // beads: [_,count1,count2]
-
-  function newState(p1name, p2name) {
-    const board = Array(NODES).fill(null);
-    P1_START.forEach(n => board[n] = { player:1, king:false });
-    P2_START.forEach(n => board[n] = { player:2, king:false });
-    return {
-      board, turn:1, selected:null,
-      validMoves:[], captures:[], forcedPieces:[],
-      multi:false,
-      p1name: p1name||'Red', p2name: p2name||'Blue',
-      beads: [null, 12, 12]
-    };
-  }
-
-  /* ── MOVE COMPUTATION ── */
-  function getCapturesFrom(board, n) {
-    const piece = board[n];
-    if (!piece) return [];
-    const result = [];
-    for (const mid of GRAPH[n]) {
-      // Must be opponent
-      if (!board[mid] || board[mid].player === piece.player) continue;
-      // Find landing: node adjacent to mid in same direction
-      // Direction vector
-      const {row:r0,col:c0} = NODE_GRID[n];
-      const {row:r1,col:c1} = NODE_GRID[mid];
-      const dr = r1-r0, dc = c1-c0;
-      const landing = NODE_GRID.findIndex((g,i) => g.row===r1+dr && g.col===c1+dc && i!==n);
-      if (landing === -1) continue;
-      if (!GRAPH[mid].includes(landing)) continue; // must be connected
-      if (board[landing]) continue; // must be empty
-      // King restriction: non-kings can only move forward
-      if (!piece.king) {
-        const forward = piece.player === 1 ? dr > 0 : dr < 0;
-        // Allow horizontal capture
-        if (dr !== 0 && !forward) continue;
-      }
-      result.push({ from:n, mid, to:landing });
-    }
-    return result;
-  }
-
-  function getMovesFrom(board, n) {
-    const piece = board[n];
-    if (!piece) return [];
-    const result = [];
-    for (const nb of GRAPH[n]) {
-      if (board[nb]) continue;
-      // King moves all dirs; normal pieces only forward
-      if (!piece.king) {
-        const {row:r0} = NODE_GRID[n];
-        const {row:r1} = NODE_GRID[nb];
-        const dr = r1-r0;
-        if (dr !== 0) {
-          const forward = piece.player === 1 ? dr > 0 : dr < 0;
-          if (!forward) continue;
+        // Grain lines
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        for (let i = 0; i < 30; i++) {
+          const gy = by + (bh / 30) * i + Math.sin(i * 1.3) * 4;
+          ctx.strokeStyle = '#1a0800';
+          ctx.lineWidth = 0.5 + Math.random() * 0.8;
+          ctx.beginPath(); ctx.moveTo(bx, gy); ctx.lineTo(bx + bw, gy + Math.sin(i) * 6); ctx.stroke();
         }
-        // Horizontal moves allowed for all
+        ctx.restore();
+
+        // Border frame
+        ctx.save();
+        const frame = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+        frame.addColorStop(0, '#f0c060');
+        frame.addColorStop(0.5, '#c09030');
+        frame.addColorStop(1, '#f0c060');
+        roundRect(ctx, bx, by, bw, bh, r);
+        ctx.strokeStyle = frame;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+
+        // Inner border inset
+        ctx.save();
+        roundRect(ctx, bx + 5, by + 5, bw - 10, bh - 10, r - 3);
+        ctx.strokeStyle = 'rgba(255,200,80,0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
       }
-      result.push({ from:n, mid:null, to:nb });
-    }
-    return result;
-  }
 
-  function getAllCaptures(board, player) {
-    const all = [];
-    for (let n = 0; n < NODES; n++)
-      if (board[n]?.player === player)
-        all.push(...getCapturesFrom(board, n));
-    return all;
-  }
-
-  function getAllMoves(board, player) {
-    const caps = getAllCaptures(board, player);
-    if (caps.length) return caps;
-    const moves = [];
-    for (let n = 0; n < NODES; n++)
-      if (board[n]?.player === player)
-        moves.push(...getMovesFrom(board, n));
-    return moves;
-  }
-
-  function countBeads(board) {
-    let p1=0, p2=0;
-    for (const p of board) {
-      if (p?.player===1) p1++;
-      if (p?.player===2) p2++;
-    }
-    return [p1,p2];
-  }
-
-  /* ── UI UPDATE ── */
-  function updateUI() {
-    if (!_state) return;
-    const [p1b,p2b] = countBeads(_state.board);
-    _state.beads[1]=p1b; _state.beads[2]=p2b;
-
-    document.getElementById('nameP1').textContent  = _state.p1name;
-    document.getElementById('nameP2').textContent  = _state.p2name;
-    document.getElementById('countP1').textContent = p1b + ' bead'+(p1b!==1?'s':'');
-    document.getElementById('countP2').textContent = p2b + ' bead'+(p2b!==1?'s':'');
-
-    const tname = _state.turn===1 ? _state.p1name : _state.p2name;
-    document.getElementById('turnLabel').textContent = tname + "'s Turn";
-
-    document.getElementById('cardP1').classList.toggle('active', _state.turn===1);
-    document.getElementById('cardP2').classList.toggle('active', _state.turn===2);
-    document.getElementById('arrowP1').classList.toggle('active-arrow', false);
-    document.getElementById('arrowP2').classList.toggle('active-arrow', false);
-
-    const forced = _state.forcedPieces.length > 0;
-    document.getElementById('captureWarn').classList.toggle('hidden', !forced);
-
-    Renderer.draw();
-  }
-
-  /* ── NODE CLICK ── */
-  function onNodeClick(n) {
-    if (!_state || _waiting) return;
-    if (_isOnline && _myPlayer !== _state.turn) {
-      showToast("It's not your turn!"); SFX.error(); return;
-    }
-
-    const piece = _state.board[n];
-
-    // Clicking own piece → select
-    if (piece && piece.player === _state.turn) {
-      // Multi-jump: must continue with same piece
-      if (_state.multi && _state.selected !== n) {
-        showToast("Continue the multi-jump!"); SFX.error(); return;
+      function roundRect(c, x, y, w, h, r) {
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r);
+        c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r);
+        c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y);
+        c.closePath();
       }
-      // Forced capture: must pick a piece that can capture
-      if (!_state.multi && _state.forcedPieces.length && !_state.forcedPieces.includes(n)) {
-        showToast("You must capture!"); SFX.error(); return;
+
+      function drawLines() {
+        const drawn = new Set();
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+
+        for (let a = 0; a < NODES; a++) {
+          for (const b of GRAPH[a]) {
+            const key = Math.min(a, b) * 100 + Math.max(a, b);
+            if (drawn.has(key)) continue;
+            drawn.add(key);
+            const pa = nodePos(a), pb = nodePos(b);
+
+            // Subtle glow under line
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,200,80,0.08)';
+            ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+            ctx.restore();
+
+            // Main line
+            ctx.strokeStyle = 'rgba(26,8,0,0.75)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+          }
+        }
       }
-      selectPiece(n);
-      return;
-    }
 
-    // Clicking a valid destination
-    if (_state.selected !== null && _state.validMoves.includes(n)) {
-      const allMoves = [...getAllCaptures(_state.board, _state.turn),
-                        ...(_state.captures.length?[]:getMovesFrom(_state.board, _state.selected))];
-      const move = findMove(_state.selected, n, _state.board, _state.turn, _state.captures.length>0);
-      if (move) { executeMove(move); return; }
-    }
+      function drawNodes() {
+        for (let n = 0; n < NODES; n++) {
+          const { x, y } = nodePos(n);
+          const r = CELL * 0.09;
 
-    // Deselect or invalid
-    if (_state.selected !== null) { _state.selected=null; _state.validMoves=[]; _state.captures=[]; updateUI(); }
-  }
+          // Carved circle
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(10,3,0,0.7)';
+          ctx.fill();
 
-  function findMove(from, to, board, player, forceCapture) {
-    // Capture?
-    const caps = getCapturesFrom(board, from);
-    const cap  = caps.find(m=>m.to===to);
-    if (cap) return cap;
-    if (forceCapture) return null;
-    // Regular
-    const moves = getMovesFrom(board, from);
-    return moves.find(m=>m.to===to) || null;
-  }
+          ctx.beginPath(); ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,200,80,0.2)';
+          ctx.fill();
+        }
+      }
 
-  function selectPiece(n) {
-    _state.selected = n;
-    SFX.select();
+      function drawHighlights() {
+        const gs = Game.state;
+        if (!gs) return;
 
-    const allCaps = getAllCaptures(_state.board, _state.turn);
-    if (allCaps.length > 0) {
-      const myCaps = getCapturesFrom(_state.board, n);
-      _state.captures   = myCaps.map(m=>m.to);
-      _state.validMoves = _state.captures;
-    } else {
-      _state.captures   = [];
-      _state.validMoves = getMovesFrom(_state.board, n).map(m=>m.to);
-    }
-    updateUI();
-  }
+        // Valid moves
+        for (const n of (gs.validMoves || [])) {
+          const { x, y } = nodePos(n);
+          const isCapture = (gs.captures || []).includes(n);
 
-  /* ── EXECUTE MOVE ── */
-  function executeMove(move, remote=false) {
-    _waiting = true;
-    const board = _state.board;
-    const piece  = board[move.from];
+          // Outer ring
+          ctx.save();
+          ctx.beginPath(); ctx.arc(x, y, CELL * 0.28, 0, Math.PI * 2);
+          ctx.strokeStyle = isCapture ? 'rgba(255,80,40,0.9)' : 'rgba(255,220,80,0.9)';
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([5, 3]);
+          ctx.stroke();
+          ctx.restore();
 
-    // Animate
-    Renderer.animateMove(move.from, move.to, piece.player, piece.king, () => {
-      _applyMove(move, remote);
-    });
+          // Inner dot
+          ctx.beginPath(); ctx.arc(x, y, CELL * 0.1, 0, Math.PI * 2);
+          ctx.fillStyle = isCapture ? 'rgba(255,80,40,0.6)' : 'rgba(255,220,80,0.6)';
+          ctx.fill();
 
-    // Optimistically start animation (board update after)
-    // Also broadcast immediately (before anim finishes) so peer sees it fast
-    if (!remote) broadcastMove(move);
-  }
+          // Glow
+          ctx.save();
+          ctx.shadowColor = isCapture ? 'rgba(255,80,40,0.8)' : 'rgba(255,220,80,0.8)';
+          ctx.shadowBlur = 14;
+          ctx.beginPath(); ctx.arc(x, y, CELL * 0.14, 0, Math.PI * 2);
+          ctx.fillStyle = 'transparent'; ctx.fill();
+          ctx.restore();
+        }
 
-  function _applyMove(move, remote) {
-    const board = _state.board;
-    const piece  = { ...board[move.from] };
+        // Hover
+        if (hoverNode !== -1) {
+          const { x, y } = nodePos(hoverNode);
+          ctx.save();
+          ctx.globalAlpha = 0.3;
+          ctx.beginPath(); ctx.arc(x, y, CELL * 0.32, 0, Math.PI * 2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+          ctx.restore();
+        }
 
-    // Move
-    board[move.to]   = piece;
-    board[move.from] = null;
+        // Capture flash
+        for (const cf of captureFlash) {
+          const { x, y } = nodePos(cf.node);
+          ctx.save();
+          ctx.globalAlpha = cf.t * 0.8;
+          ctx.beginPath(); ctx.arc(x, y, CELL * 0.38 * (1 - cf.t * 0.3), 0, Math.PI * 2);
+          ctx.fillStyle = '#ff4020';
+          ctx.shadowColor = '#ff4020';
+          ctx.shadowBlur = 20;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
 
-    // Capture
-    if (move.mid !== null) {
-      board[move.mid] = null;
-      SFX.capture();
-      Renderer.flashCapture(move.mid);
-    } else {
-      SFX.move();
-    }
+      function drawPieces() {
+        const gs = Game.state;
+        if (!gs) return;
+        const board = gs.board;
 
-    // King promotion
-    const promoted =
-      (piece.player===1 && NODE_GRID[move.to].row===4) ||
-      (piece.player===2 && NODE_GRID[move.to].row===0);
-    if (promoted && !piece.king) {
-      board[move.to].king = true;
-      SFX.king();
-    }
+        // Animated moving piece
+        const animNode = animPiece ? animPiece.nodeTo : -1;
 
-    // Multi-jump?
-    if (move.mid !== null) {
-      const nextCaps = getCapturesFrom(board, move.to);
-      if (nextCaps.length > 0) {
-        _state.selected   = move.to;
-        _state.captures   = nextCaps.map(m=>m.to);
-        _state.validMoves = _state.captures;
-        _state.multi      = true;
-        _state.forcedPieces = [move.to];
-        _waiting = false;
+        for (let n = 0; n < NODES; n++) {
+          const piece = board[n];
+          if (!piece) continue;
+          if (n === animNode && animPiece) continue; // drawn separately
+
+          const { x, y } = nodePos(n);
+          const selected = gs.selected === n;
+          const r = CELL * 0.32;
+          drawBead(x, y, r, piece.player, selected, piece.king);
+        }
+
+        // Draw animating piece
+        if (animPiece) {
+          const pa = nodePos(animPiece.nodeFrom);
+          const pb = nodePos(animPiece.nodeTo);
+          const t = animPiece.progress;
+          const et = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease in-out cubic
+          const x = pa.x + (pb.x - pa.x) * et;
+          const y = pa.y + (pb.y - pa.y) * et - Math.sin(t * Math.PI) * CELL * 0.3; // arc
+          const r = CELL * 0.32;
+          drawBead(x, y, r, animPiece.player, false, animPiece.king);
+        }
+      }
+
+      function drawBead(x, y, r, player, selected, king) {
+        const isRed = player === 1;
+        const hi = isRed ? '#ff8060' : '#6090ff';
+        const mid = isRed ? '#d42020' : '#1540c0';
+        const sh = isRed ? '#6a0808' : '#091a60';
+        const shC = isRed ? 'rgba(212,32,32,0.6)' : 'rgba(21,64,192,0.6)';
+
+        ctx.save();
+
+        // Selected glow
+        if (selected) {
+          ctx.shadowColor = isRed ? 'rgba(255,80,40,1)' : 'rgba(60,120,255,1)';
+          ctx.shadowBlur = 22;
+          // Outer ring
+          ctx.beginPath(); ctx.arc(x, y, r + 5, 0, Math.PI * 2);
+          ctx.strokeStyle = isRed ? 'rgba(255,100,60,0.8)' : 'rgba(80,140,255,0.8)';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        } else {
+          ctx.shadowColor = shC;
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetY = 3;
+        }
+
+        // Bead body
+        const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.05, x, y, r);
+        g.addColorStop(0, hi);
+        g.addColorStop(0.4, mid);
+        g.addColorStop(1, sh);
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+
+        // Specular highlight
+        ctx.beginPath(); ctx.ellipse(x - r * 0.25, y - r * 0.28, r * 0.28, r * 0.18, -0.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.fill();
+
+        // Tiny bottom reflect
+        ctx.beginPath(); ctx.ellipse(x + r * 0.1, y + r * 0.5, r * 0.15, r * 0.07, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fill();
+
+        // King crown
+        if (king) {
+          ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 10;
+          ctx.fillStyle = '#ffd700';
+          ctx.font = `bold ${r * 0.9}px serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('♛', x, y + 1);
+        }
+
+        ctx.restore();
+      }
+
+      // Animate piece movement
+      function animateMove(from, to, player, king, onDone) {
+        if (animReq) cancelAnimationFrame(animReq);
+        animPiece = { nodeFrom: from, nodeTo: to, player, king, progress: 0 };
+        const DURATION = 300;
+        let start = null;
+        function step(ts) {
+          if (!start) start = ts;
+          const p = Math.min((ts - start) / DURATION, 1);
+          animPiece.progress = p;
+          draw();
+          if (p < 1) animReq = requestAnimationFrame(step);
+          else {
+            animPiece = null;
+            animReq = null;
+            draw();
+            if (onDone) onDone();
+          }
+        }
+        animReq = requestAnimationFrame(step);
+      }
+
+      // Flash capture at node
+      function flashCapture(node) {
+        captureFlash.push({ node, t: 1.0 });
+        let last = null;
+        const fade = (ts) => {
+          if (!last) last = ts;
+          const dt = (ts - last) / 1000;
+          last = ts;
+          let alive = false;
+          for (const cf of captureFlash) {
+            cf.t -= dt * 2.5;
+            if (cf.t > 0) alive = true;
+          }
+          captureFlash = captureFlash.filter(cf => cf.t > 0);
+          draw();
+          if (alive) requestAnimationFrame(fade);
+        };
+        requestAnimationFrame(fade);
+      }
+
+      return { init, resize, draw, animateMove, flashCapture, nodePos };
+    })();
+
+    /* ══════════════════════════════════════════
+       TIMER
+       ══════════════════════════════════════════ */
+    const Timer = (() => {
+      let interval = null;
+      let seconds = 30;
+      const LIMIT = 30;
+
+      function reset() {
+        clearInterval(interval);
+        seconds = LIMIT;
+        update();
+      }
+      function start(onExpire) {
+        reset();
+        interval = setInterval(() => {
+          seconds--;
+          update();
+          if (seconds <= 0) {
+            clearInterval(interval);
+            if (onExpire) onExpire();
+          }
+        }, 1000);
+      }
+      function stop() { clearInterval(interval); }
+      function update() {
+        const el = document.getElementById('timerDisplay');
+        const s = Math.max(0, seconds);
+        el.textContent = `0:${s.toString().padStart(2, '0')}`;
+        el.classList.toggle('danger', s <= 8);
+      }
+      return { reset, start, stop };
+    })();
+
+    /* ══════════════════════════════════════════
+       GAME LOGIC
+       ══════════════════════════════════════════ */
+    const Game = (() => {
+      let _state = null;
+      let _isOnline = false;
+      let _myPlayer = null;
+      let _waiting = false; // waiting for animation
+
+      // State shape:
+      // board: Array[25] of null | { player:1|2, king:bool }
+      // turn: 1|2
+      // selected: null | nodeIndex
+      // validMoves: []  (node indices reachable from selected)
+      // captures: []    (subset of validMoves that are captures)
+      // forcedPieces: [] (node indices with mandatory captures)
+      // multi: bool     (multi-jump in progress)
+      // p1name, p2name: string
+      // beads: [_,count1,count2]
+
+      function newState(p1name, p2name) {
+        const board = Array(NODES).fill(null);
+        P1_START.forEach(n => board[n] = { player: 1, king: false });
+        P2_START.forEach(n => board[n] = { player: 2, king: false });
+        return {
+          board, turn: 1, selected: null,
+          validMoves: [], captures: [], forcedPieces: [],
+          multi: false,
+          p1name: p1name || 'Red', p2name: p2name || 'Blue',
+          beads: [null, 12, 12]
+        };
+      }
+
+      /* ── MOVE COMPUTATION ── */
+      function getCapturesFrom(board, n) {
+        const piece = board[n];
+        if (!piece) return [];
+        const result = [];
+        for (const mid of GRAPH[n]) {
+          // Must be opponent
+          if (!board[mid] || board[mid].player === piece.player) continue;
+          // Find landing: node adjacent to mid in same direction
+          // Direction vector
+          const { row: r0, col: c0 } = NODE_GRID[n];
+          const { row: r1, col: c1 } = NODE_GRID[mid];
+          const dr = r1 - r0, dc = c1 - c0;
+          const landing = NODE_GRID.findIndex((g, i) => g.row === r1 + dr && g.col === c1 + dc && i !== n);
+          if (landing === -1) continue;
+          if (!GRAPH[mid].includes(landing)) continue; // must be connected
+          if (board[landing]) continue; // must be empty
+          // King restriction: non-kings can only move forward
+          if (!piece.king) {
+            const forward = piece.player === 1 ? dr > 0 : dr < 0;
+            // Allow horizontal capture
+            if (dr !== 0 && !forward) continue;
+          }
+          result.push({ from: n, mid, to: landing });
+        }
+        return result;
+      }
+
+      function getMovesFrom(board, n) {
+        const piece = board[n];
+        if (!piece) return [];
+        const result = [];
+        for (const nb of GRAPH[n]) {
+          if (board[nb]) continue;
+          // King moves all dirs; normal pieces only forward
+          if (!piece.king) {
+            const { row: r0 } = NODE_GRID[n];
+            const { row: r1 } = NODE_GRID[nb];
+            const dr = r1 - r0;
+            if (dr !== 0) {
+              const forward = piece.player === 1 ? dr > 0 : dr < 0;
+              if (!forward) continue;
+            }
+            // Horizontal moves allowed for all
+          }
+          result.push({ from: n, mid: null, to: nb });
+        }
+        return result;
+      }
+
+      function getAllCaptures(board, player) {
+        const all = [];
+        for (let n = 0; n < NODES; n++)
+          if (board[n]?.player === player)
+            all.push(...getCapturesFrom(board, n));
+        return all;
+      }
+
+      function getAllMoves(board, player) {
+        const caps = getAllCaptures(board, player);
+        if (caps.length) return caps;
+        const moves = [];
+        for (let n = 0; n < NODES; n++)
+          if (board[n]?.player === player)
+            moves.push(...getMovesFrom(board, n));
+        return moves;
+      }
+
+      function countBeads(board) {
+        let p1 = 0, p2 = 0;
+        for (const p of board) {
+          if (p?.player === 1) p1++;
+          if (p?.player === 2) p2++;
+        }
+        return [p1, p2];
+      }
+
+      /* ── UI UPDATE ── */
+      function updateUI() {
+        if (!_state) return;
+        const [p1b, p2b] = countBeads(_state.board);
+        _state.beads[1] = p1b; _state.beads[2] = p2b;
+
+        document.getElementById('nameP1').textContent = _state.p1name;
+        document.getElementById('nameP2').textContent = _state.p2name;
+        document.getElementById('countP1').textContent = p1b + ' bead' + (p1b !== 1 ? 's' : '');
+        document.getElementById('countP2').textContent = p2b + ' bead' + (p2b !== 1 ? 's' : '');
+
+        const tname = _state.turn === 1 ? _state.p1name : _state.p2name;
+        document.getElementById('turnLabel').textContent = tname + "'s Turn";
+
+        document.getElementById('cardP1').classList.toggle('active', _state.turn === 1);
+        document.getElementById('cardP2').classList.toggle('active', _state.turn === 2);
+        document.getElementById('arrowP1').classList.toggle('active-arrow', false);
+        document.getElementById('arrowP2').classList.toggle('active-arrow', false);
+
+        const forced = _state.forcedPieces.length > 0;
+        document.getElementById('captureWarn').classList.toggle('hidden', !forced);
+
+        Renderer.draw();
+      }
+
+      /* ── NODE CLICK ── */
+      function onNodeClick(n) {
+        if (!_state || _waiting) return;
+        if (_isOnline && _myPlayer !== _state.turn) {
+          showToast("It's not your turn!"); SFX.error(); return;
+        }
+
+        const piece = _state.board[n];
+
+        // Clicking own piece → select
+        if (piece && piece.player === _state.turn) {
+          // Multi-jump: must continue with same piece
+          if (_state.multi && _state.selected !== n) {
+            showToast("Continue the multi-jump!"); SFX.error(); return;
+          }
+          // Forced capture: must pick a piece that can capture
+          if (!_state.multi && _state.forcedPieces.length && !_state.forcedPieces.includes(n)) {
+            showToast("You must capture!"); SFX.error(); return;
+          }
+          selectPiece(n);
+          return;
+        }
+
+        // Clicking a valid destination
+        if (_state.selected !== null && _state.validMoves.includes(n)) {
+          const allMoves = [...getAllCaptures(_state.board, _state.turn),
+          ...(_state.captures.length ? [] : getMovesFrom(_state.board, _state.selected))];
+          const move = findMove(_state.selected, n, _state.board, _state.turn, _state.captures.length > 0);
+          if (move) { executeMove(move); return; }
+        }
+
+        // Deselect or invalid
+        if (_state.selected !== null) { _state.selected = null; _state.validMoves = []; _state.captures = []; updateUI(); }
+      }
+
+      function findMove(from, to, board, player, forceCapture) {
+        // Capture?
+        const caps = getCapturesFrom(board, from);
+        const cap = caps.find(m => m.to === to);
+        if (cap) return cap;
+        if (forceCapture) return null;
+        // Regular
+        const moves = getMovesFrom(board, from);
+        return moves.find(m => m.to === to) || null;
+      }
+
+      function selectPiece(n) {
+        _state.selected = n;
+        SFX.select();
+
+        const allCaps = getAllCaptures(_state.board, _state.turn);
+        if (allCaps.length > 0) {
+          const myCaps = getCapturesFrom(_state.board, n);
+          _state.captures = myCaps.map(m => m.to);
+          _state.validMoves = _state.captures;
+        } else {
+          _state.captures = [];
+          _state.validMoves = getMovesFrom(_state.board, n).map(m => m.to);
+        }
         updateUI();
-        return;
       }
-    }
 
-    // End turn
-    _state.selected   = null;
-    _state.validMoves = [];
-    _state.captures   = [];
-    _state.multi      = false;
-    _state.turn       = _state.turn===1 ? 2 : 1;
+      /* ── EXECUTE MOVE ── */
+      function executeMove(move, remote = false) {
+        _waiting = true;
+        const board = _state.board;
+        const piece = board[move.from];
 
-    // Compute forced pieces for next turn
-    const nextCaps = getAllCaptures(board, _state.turn);
-    _state.forcedPieces = [...new Set(nextCaps.map(m=>m.from))];
+        // Animate
+        Renderer.animateMove(move.from, move.to, piece.player, piece.king, () => {
+          _applyMove(move, remote);
+        });
 
-    // Check win
-    const [p1b,p2b] = countBeads(board);
-    const noMoves = getAllMoves(board, _state.turn).length === 0;
-    _waiting = false;
+        // Optimistically start animation (board update after)
+        // Also broadcast immediately (before anim finishes) so peer sees it fast
+        if (_isOnline) MP.sendMove(move);
+      }
 
-    updateUI();
-    Timer.start(onTimerExpire);
+      function _applyMove(move, remote) {
+        const board = _state.board;
+        const piece = { ...board[move.from] };
 
-    if (p1b===0 || p2b===0 || noMoves) {
-      const winner = _state.turn===1 ? 2 : 1; // opponent of who has no moves
-      const reason = (p1b===0||p2b===0) ? 'All beads captured!' : 'No moves remaining!';
-      setTimeout(()=>showWin(winner, reason), 350);
-    }
-  }
+        // Move
+        board[move.to] = piece;
+        board[move.from] = null;
 
-  function onTimerExpire() {
-    if (!_state) return;
-    showToast("Time's up! Turn forfeited.");
-    // Skip turn
-    _state.selected=null; _state.validMoves=[]; _state.captures=[]; _state.multi=false;
-    _state.turn = _state.turn===1?2:1;
-    _state.forcedPieces = [...new Set(getAllCaptures(_state.board, _state.turn).map(m=>m.from))];
-    updateUI();
-    Timer.start(onTimerExpire);
-  }
+        // Capture
+        if (move.mid !== null) {
+          board[move.mid] = null;
+          SFX.capture();
+          Renderer.flashCapture(move.mid);
+        } else {
+          SFX.move();
+        }
 
-  function showWin(player, reason) {
-    Timer.stop();
-    SFX.win();
-    const name = player===1 ? _state.p1name : _state.p2name;
-    document.getElementById('winName').textContent   = name;
-    document.getElementById('winReason').textContent = reason;
-    document.getElementById('winOverlay').classList.remove('hidden');
-  }
+        // King promotion
+        const promoted =
+          (piece.player === 1 && NODE_GRID[move.to].row === 4) ||
+          (piece.player === 2 && NODE_GRID[move.to].row === 0);
+        if (promoted && !piece.king) {
+          board[move.to].king = true;
+          SFX.king();
+        }
 
-  function rematch() {
-    document.getElementById('winOverlay').classList.add('hidden');
-    _state = newState(_state.p1name, _state.p2name);
-    _state.forcedPieces = [...new Set(getAllCaptures(_state.board, _state.turn).map(m=>m.from))];
-    _waiting = false;
-    addChat('system-msg', null, '— New game started —');
-    updateUI();
-    Timer.start(onTimerExpire);
-    if (_isOnline) MP.broadcastRematch();
-  }
+        // Multi-jump?
+        if (move.mid !== null) {
+          const nextCaps = getCapturesFrom(board, move.to);
+          if (nextCaps.length > 0) {
+            _state.selected = move.to;
+            _state.captures = nextCaps.map(m => m.to);
+            _state.validMoves = _state.captures;
+            _state.multi = true;
+            _state.forcedPieces = [move.to];
+            _waiting = false;
+            updateUI();
+            return;
+          }
+        }
 
-  function quit() {
-    Timer.stop();
-    document.getElementById('winOverlay').classList.add('hidden');
-    document.getElementById('gameScreen').classList.add('hidden');
-    document.getElementById('lobbyScreen').classList.remove('hidden');
-    document.getElementById('waitingPanel').style.display='none';
-    document.getElementById('onlineActions').style.display='block';
-    document.getElementById('statusMsg').style.display='none';
-    _state=null; _isOnline=false; _myPlayer=null;
-    if (MP.peer) { try{MP.peer.destroy();}catch(e){} MP.peer=null; }
-    document.getElementById('chatMessages').innerHTML='';
-  }
+        // End turn
+        _state.selected = null;
+        _state.validMoves = [];
+        _state.captures = [];
+        _state.multi = false;
+        _state.turn = _state.turn === 1 ? 2 : 1;
 
-  function startLocal(p1, p2) {
-    _isOnline=false; _myPlayer=null;
-    _state = newState(p1, p2);
-    _state.forcedPieces = [...new Set(getAllCaptures(_state.board, 1).map(m=>m.from))];
-    _waiting = false;
-    document.getElementById('netDot').className='net-dot local';
-    document.getElementById('netLabel').textContent='Local';
-    document.getElementById('lobbyScreen').classList.add('hidden');
-    document.getElementById('gameScreen').classList.remove('hidden');
-    document.getElementById('chatMessages').innerHTML='';
-    addChat('system-msg', null, `${p1} (🔴) vs ${p2} (🔵) — Good luck!`);
-    updateUI();
-    Timer.start(onTimerExpire);
-  }
+        // Compute forced pieces for next turn
+        const nextCaps = getAllCaptures(board, _state.turn);
+        _state.forcedPieces = [...new Set(nextCaps.map(m => m.from))];
 
-  function startOnline(p1name, p2name, myNum) {
-    _isOnline=true; _myPlayer=myNum;
-    _state = newState(p1name, p2name);
-    _state.forcedPieces = [...new Set(getAllCaptures(_state.board, 1).map(m=>m.from))];
-    _waiting=false;
-    document.getElementById('netDot').className='net-dot online';
-    document.getElementById('netLabel').textContent='Online';
-    document.getElementById('lobbyScreen').classList.add('hidden');
-    document.getElementById('gameScreen').classList.remove('hidden');
-    document.getElementById('waitingPanel').style.display='none';
-    document.getElementById('onlineActions').style.display='block';
-    document.getElementById('statusMsg').style.display='none';
-    document.getElementById('chatMessages').innerHTML='';
-    addChat('system-msg', null, `Connected! You are Player ${myNum} (${myNum===1?'🔴 Red':'🔵 Blue'})`);
-    addChat('system-msg', null, `${p1name} (🔴) vs ${p2name} (🔵)`);
-    updateUI();
-    Timer.start(onTimerExpire);
-  }
+        // Check win
+        const [p1b, p2b] = countBeads(board);
+        const noMoves = getAllMoves(board, _state.turn).length === 0;
+        _waiting = false;
 
-  function sendChat() {
-    const inp = document.getElementById('chatInput');
-    const txt = inp.value.trim();
-    if (!txt) return;
-    inp.value = '';
-    const player = _isOnline ? _myPlayer : (_state?.turn||1);
-    const cls = player===1?'p1-msg':'p2-msg';
-    const name = player===1?_state.p1name:_state.p2name;
-    addChat(cls, name, txt);
-    if (_isOnline && MP.peer) MP.peer.send({ type:'chat', player, text:txt });
-  }
+        updateUI();
+        Timer.start(onTimerExpire);
 
-  function receiveMove(move) {
-    if (!_state) return;
-    executeMove(move, true);
-  }
+        if (p1b === 0 || p2b === 0 || noMoves) {
+          const winner = _state.turn === 1 ? 2 : 1; // opponent of who has no moves
+          const reason = (p1b === 0 || p2b === 0) ? 'All beads captured!' : 'No moves remaining!';
+          setTimeout(() => showWin(winner, reason), 350);
+        }
+      }
 
-  function broadcastMove(move) {
-    if (_isOnline && MP.peer) MP.peer.send({ type:'move', move });
-  }
+      function onTimerExpire() {
+        if (!_state) return;
+        showToast("Time's up! Turn forfeited.");
+        // Skip turn
+        _state.selected = null; _state.validMoves = []; _state.captures = []; _state.multi = false;
+        _state.turn = _state.turn === 1 ? 2 : 1;
+        _state.forcedPieces = [...new Set(getAllCaptures(_state.board, _state.turn).map(m => m.from))];
+        updateUI();
+        Timer.start(onTimerExpire);
+      }
 
-  return {
-    get state() { return _state; },
-    onNodeClick,
-    startLocal(){ // called from html
-      const p1 = document.getElementById('localP1').value.trim()||'Red';
-      const p2 = document.getElementById('localP2').value.trim()||'Blue';
-      startLocal(p1, p2);
-    },
-    startOnline, receiveMove, rematch, quit, sendChat,
-    _startOnline: startOnline,
-  };
-})();
+      function showWin(player, reason) {
+        Timer.stop();
+        SFX.win();
+        const name = player === 1 ? _state.p1name : _state.p2name;
+        document.getElementById('winName').textContent = name;
+        document.getElementById('winReason').textContent = reason;
+        document.getElementById('winOverlay').classList.remove('hidden');
+      }
 
-/* ══════════════════════════════════════════
-   MULTIPLAYER (BroadcastChannel)
-   Works across tabs on the same browser/device.
-   For true cross-device play, users exchange the
-   room code; both must be on the same origin.
-   ══════════════════════════════════════════ */
-const MP = (() => {
-  let _peer = null;
-  let _roomCode = null;
-  let _myPlayer = null;
-  let _myName = null;
+      function rematch() {
+        document.getElementById('winOverlay').classList.add('hidden');
+        _state = newState(_state.p1name, _state.p2name);
+        _state.forcedPieces = [...new Set(getAllCaptures(_state.board, _state.turn).map(m => m.from))];
+        _waiting = false;
+        addChat('system-msg', null, '— New game started —');
+        updateUI();
+        Timer.start(onTimerExpire);
+        if (_isOnline) MP.broadcastRematch();
+      }
 
-  class LocalPeer {
-    constructor(code, num) {
-      this.num = num;
-      this.ch  = new BroadcastChannel('12beads_v2_' + code);
-      this.ch.onmessage = (e) => {
-        if (e.data.from === this.num) return;
-        this._handle(e.data);
+      function quit() {
+        Timer.stop();
+        document.getElementById('winOverlay').classList.add('hidden');
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('lobbyScreen').classList.remove('hidden');
+        document.getElementById('waitingPanel').style.display = 'none';
+        document.getElementById('onlineActions').style.display = 'block';
+        document.getElementById('statusMsg').style.display = 'none';
+        _state = null; _isOnline = false; _myPlayer = null;
+        if (MP.peer) { try { MP.peer.destroy(); } catch (e) { } MP.peer = null; }
+        document.getElementById('chatMessages').innerHTML = '';
+      }
+
+      function startLocal(p1, p2) {
+        _isOnline = false; _myPlayer = null;
+        _state = newState(p1, p2);
+        _state.forcedPieces = [...new Set(getAllCaptures(_state.board, 1).map(m => m.from))];
+        _waiting = false;
+        document.getElementById('netDot').className = 'net-dot local';
+        document.getElementById('netLabel').textContent = 'Local';
+        document.getElementById('lobbyScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        document.getElementById('chatMessages').innerHTML = '';
+        addChat('system-msg', null, `${p1} (🔴) vs ${p2} (🔵) — Good luck!`);
+        updateUI();
+        Timer.start(onTimerExpire);
+      }
+
+      function startOnline(p1name, p2name, myNum) {
+        _isOnline = true; _myPlayer = myNum;
+        _state = newState(p1name, p2name);
+        _state.forcedPieces = [...new Set(getAllCaptures(_state.board, 1).map(m => m.from))];
+        _waiting = false;
+        document.getElementById('netDot').className = 'net-dot online';
+        document.getElementById('netLabel').textContent = 'Online';
+        document.getElementById('lobbyScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        document.getElementById('waitingPanel').style.display = 'none';
+        document.getElementById('onlineActions').style.display = 'block';
+        document.getElementById('statusMsg').style.display = 'none';
+        document.getElementById('chatMessages').innerHTML = '';
+        addChat('system-msg', null, `Connected! You are Player ${myNum} (${myNum === 1 ? '🔴 Red' : '🔵 Blue'})`);
+        addChat('system-msg', null, `${p1name} (🔴) vs ${p2name} (🔵)`);
+        updateUI();
+        Timer.start(onTimerExpire);
+      }
+
+      function sendChat() {
+        const inp = document.getElementById('chatInput');
+        const txt = inp.value.trim();
+        if (!txt) return;
+        inp.value = '';
+        const player = _isOnline ? _myPlayer : (_state?.turn || 1);
+        const cls = player === 1 ? 'p1-msg' : 'p2-msg';
+        const name = player === 1 ? _state.p1name : _state.p2name;
+        addChat(cls, name, txt);
+        if (_isOnline && MP.peer) MP.peer.send({ type: 'chat', player, text: txt });
+      }
+
+      function receiveMove(move) {
+        if (!_state) return;
+        executeMove(move, true);
+      }
+
+      function broadcastMove(move) {
+        if (_isOnline && MP.peer) MP.peer.send({ type: 'move', move });
+      }
+
+      return {
+        get state() { return _state; },
+        onNodeClick,
+        startLocal() { // called from html
+          const p1 = document.getElementById('localP1').value.trim() || 'Red';
+          const p2 = document.getElementById('localP2').value.trim() || 'Blue';
+          startLocal(p1, p2);
+        },
+        startOnline, receiveMove, rematch, quit, sendChat,
+        _startOnline: startOnline,
       };
-      this._handlers = {};
-    }
-    on(type, fn) { this._handlers[type] = fn; }
-    send(data)   { this.ch.postMessage({ ...data, from: this.num }); }
-    _handle(data){ if (this._handlers[data.type]) this._handlers[data.type](data); }
-    destroy()    { try{ this.ch.close(); }catch(e){} }
-  }
+    })();
 
-  function genCode() { return String(Math.floor(1000+Math.random()*9000)); }
+    /* ══════════════════════════════════════════
+       MULTIPLAYER (BroadcastChannel)
+       Works across tabs on the same browser/device.
+       For true cross-device play, users exchange the
+       room code; both must be on the same origin.
+       ══════════════════════════════════════════ */
+    const MP = {
+      roomCode: null,
+      playerNum: null,
 
-  function setStatus(msg, cls) {
-    const el = document.getElementById('statusMsg');
-    el.textContent = msg; el.className = 'status-msg '+cls;
-    el.style.display = 'block';
-  }
+      createRoom() {
+        const name = document.getElementById("onlineName").value || "Player";
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
 
-  function createRoom() {
-    const name = document.getElementById('onlineName').value.trim()||'Red';
-    _roomCode = genCode();
-    _myPlayer = 1; _myName = name;
+        this.roomCode = code;
+        this.playerNum = 1;
 
-    document.getElementById('onlineActions').style.display='none';
-    document.getElementById('waitingPanel').style.display='block';
-    document.getElementById('displayCode').textContent = _roomCode;
+        db.ref("rooms/" + code).set({
+          player1: name,
+          player2: null,
+          move: null
+        });
 
-    _peer = new LocalPeer(_roomCode, 1);
-    _peer.on('join', (d)=>{
-      const p2name = d.name||'Blue';
-      _peer.send({ type:'welcome', name });
-      Game._startOnline(name, p2name, 1);
+        document.getElementById("displayCode").textContent = code;
+        document.getElementById("onlineActions").style.display = "none";
+        document.getElementById("waitingPanel").style.display = "block";
+
+        db.ref("rooms/" + code).on("value", snap => {
+          const room = snap.val();
+          if (room.player2) {
+            Game.startOnline(room.player1, room.player2, 1);
+            MP.listenForMoves();
+          }
+        });
+      },
+
+      joinRoom() {
+        const code = document.getElementById("joinCode").value;
+        const name = document.getElementById("onlineName").value || "Player";
+
+        this.roomCode = code;
+        this.playerNum = 2;
+
+        db.ref("rooms/" + code).once("value", snap => {
+          if (!snap.exists()) {
+            alert("Room not found");
+            return;
+          }
+
+          db.ref("rooms/" + code + "/player2").set(name);
+
+          const room = snap.val();
+          Game.startOnline(room.player1, name, 2);
+          MP.listenForMoves();
+        });
+      },
+
+      sendMove(move) {
+        db.ref("rooms/" + this.roomCode + "/move").set({
+          move: move,
+          sender: this.playerNum,
+          time: Date.now()
+        });
+      },
+
+      listenForMoves() {
+        db.ref("rooms/" + this.roomCode + "/move").on("value", snap => {
+          const data = snap.val();
+          if (!data) return;
+
+          if (data.sender === this.playerNum) return;
+
+          Game.executeMove(data.move, true);
+        });
+      },
+
+      cancelRoom() {
+        db.ref("rooms/" + this.roomCode).remove();
+        location.reload();
+      }
+    };
+
+    /* ══════════════════════════════════════════
+       BOOT
+       ══════════════════════════════════════════ */
+    window.addEventListener('DOMContentLoaded', () => {
+      Renderer.init();
     });
-    _peer.on('move',    (d)=> Game.receiveMove(d.move));
-    _peer.on('chat',    (d)=> addChat(d.player===1?'p1-msg':'p2-msg', d.player===1?Game.state?.p1name:Game.state?.p2name, d.text));
-    _peer.on('rematch', ()=> Game.rematch());
 
-    showToast('Room created! Code: '+_roomCode, 3500);
-  }
-
-  function joinRoom() {
-    const code = document.getElementById('joinCode').value.trim();
-    const name = document.getElementById('onlineName').value.trim()||'Blue';
-    if (!/^\d{4}$/.test(code)) { setStatus('Enter a valid 4-digit code.','error'); SFX.error(); return; }
-
-    _roomCode=code; _myPlayer=2; _myName=name;
-    _peer = new LocalPeer(code, 2);
-
-    _peer.on('welcome',(d)=>{
-      const p1name = d.name||'Red';
-      Game._startOnline(p1name, name, 2);
+    window.addEventListener('resize', () => {
+      if (Game.state) Renderer.resize();
     });
-    _peer.on('move',    (d)=> Game.receiveMove(d.move));
-    _peer.on('chat',    (d)=> addChat(d.player===1?'p1-msg':'p2-msg', d.player===1?Game.state?.p1name:Game.state?.p2name, d.text));
-    _peer.on('rematch', ()=> Game.rematch());
 
-    setStatus('Connecting to room '+code+'…','info');
-    _peer.send({ type:'join', name });
-
-    setTimeout(()=>{
-      if (!Game.state) setStatus('Could not connect — make sure both players open the same room code in different tabs/windows.','error');
-    }, 9000);
-  }
-
-  function cancelRoom() {
-    document.getElementById('waitingPanel').style.display='none';
-    document.getElementById('onlineActions').style.display='block';
-    if (_peer) { _peer.destroy(); _peer=null; }
-  }
-
-  function broadcastRematch() {
-    if (_peer) _peer.send({ type:'rematch' });
-  }
-
-  return { get peer(){return _peer;}, createRoom, joinRoom, cancelRoom, broadcastRematch };
-})();
-
-/* ══════════════════════════════════════════
-   BOOT
-   ══════════════════════════════════════════ */
-window.addEventListener('DOMContentLoaded', () => {
-  Renderer.init();
-});
-
-window.addEventListener('resize', () => {
-  if (Game.state) Renderer.resize();
-});
-
-</script>
+  </script>
 </body>
+
 </html>
